@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const { chromium } = require('playwright');
 const config = require('./config');
 const { parseGroupFeedResponse } = require('./parser');
@@ -9,13 +10,21 @@ const { groupIdFromUrl } = require('./writer');
  * Blocked resource types để tăng tốc crawl
  * GraphQL responses vẫn đi qua vì đây là XHR/fetch, không phải media
  */
-const BLOCKED_TYPES = new Set(['image', 'media', 'font', 'stylesheet']);
+const BLOCKED_TYPES = new Set(['image', 'media']);
 
 /**
  * Check xem URL có phải GraphQL endpoint không
  */
 function isGraphQL(url) {
   return url.includes('/api/graphql') || url.includes('/graphql');
+}
+
+function chronologicalGroupUrl(groupUrl) {
+  const url = new URL(groupUrl, 'https://www.facebook.com');
+  url.protocol = 'https:';
+  url.hostname = 'www.facebook.com';
+  url.searchParams.set('sorting_setting', 'CHRONOLOGICAL');
+  return url.toString();
 }
 
 /**
@@ -52,6 +61,17 @@ function mergePosts(existing, incoming) {
   return Array.from(map.values());
 }
 
+function oldestPostDate(posts) {
+  const dates = posts
+    .map(p => p.post_date)
+    .filter(Boolean)
+    .map(d => new Date(d))
+    .filter(d => !Number.isNaN(d.getTime()));
+
+  if (dates.length === 0) return '';
+  return new Date(Math.min(...dates)).toISOString();
+}
+
 /**
  * Crawl feed của một group
  * @param {object} browser - Playwright browser instance
@@ -62,13 +82,16 @@ function mergePosts(existing, incoming) {
 async function crawlGroupFeed(browser, groupUrl, options = {}) {
   const { dateFrom, dateTo } = options;
   const groupId = groupIdFromUrl(groupUrl);
+  const feedUrl = chronologicalGroupUrl(groupUrl);
   console.log(`\n[Phase 1] Bắt đầu crawl group: ${groupId}`);
-  console.log(`  URL: ${groupUrl}`);
+  console.log(`  URL: ${feedUrl}`);
 
   const page = await browser.newPage();
   let allPosts = [];
   let scrollCount = 0;
   let consecutiveOldPosts = 0;
+  let lastPostCount = 0;
+  let scrollsWithoutNewPosts = 0;
   let groupName = '';
 
   try {
@@ -124,7 +147,7 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
 
     // ── Navigate đến group ──
     console.log(`  Đang mở trang...`);
-    await page.goto(groupUrl, {
+    await page.goto(feedUrl, {
       waitUntil: 'domcontentloaded',
       timeout: config.POST_LOAD_TIMEOUT,
     });
@@ -145,7 +168,11 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
 
     while (scrollCount < config.SCROLL_MAX_ATTEMPTS) {
       // Dừng sớm nếu thấy nhiều bài cũ hơn date range
-      if (dateFrom && consecutiveOldPosts >= 5) {
+      if (
+        dateFrom
+        && config.STOP_AFTER_OLD_POSTS > 0
+        && consecutiveOldPosts >= config.STOP_AFTER_OLD_POSTS
+      ) {
         console.log(`  → Thấy ${consecutiveOldPosts} bài cũ hơn DATE_FROM, dừng scroll sớm`);
         break;
       }
@@ -157,9 +184,26 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
       // Delay để tránh rate limit và chờ content load
       await page.waitForTimeout(config.SCROLL_DELAY_MS);
 
+      if (allPosts.length > lastPostCount) {
+        lastPostCount = allPosts.length;
+        scrollsWithoutNewPosts = 0;
+      } else {
+        scrollsWithoutNewPosts++;
+      }
+
       // Log progress mỗi 5 lần scroll
       if (scrollCount % 5 === 0) {
-        console.log(`  Scroll ${scrollCount}/${config.SCROLL_MAX_ATTEMPTS} — Tổng posts: ${allPosts.length}`);
+        const oldest = oldestPostDate(allPosts);
+        const oldestText = oldest ? ` — Cũ nhất: ${oldest}` : '';
+        console.log(`  Scroll ${scrollCount}/${config.SCROLL_MAX_ATTEMPTS} — Tổng posts: ${allPosts.length}${oldestText}`);
+      }
+
+      if (
+        config.STOP_AFTER_NO_NEW_SCROLLS > 0
+        && scrollsWithoutNewPosts >= config.STOP_AFTER_NO_NEW_SCROLLS
+      ) {
+        console.log(`  → Không có post mới sau ${scrollsWithoutNewPosts} lần scroll, dừng`);
+        break;
       }
 
       // Check nếu đã đến cuối trang
@@ -184,26 +228,78 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
 }
 
 /**
- * Launch browser với Chrome profile
+ * Launch browser, đăng nhập Facebook bằng session đã lưu (session.json).
+ * Nếu chưa có session hoặc đã hết hạn, chờ người dùng đăng nhập tay trong
+ * Chrome vừa mở, rồi tự lưu lại session để dùng cho các lần chạy sau.
  */
 async function launchBrowser() {
-  console.log('[Browser] Khởi động Chrome với profile sẵn...');
-  console.log(`  Profile: ${config.CHROME_PROFILE_PATH}`);
+  console.log('[Browser] Khởi động Chrome...');
 
-  const browser = await chromium.launchPersistentContext(config.CHROME_PROFILE_PATH, {
-    headless: false,               // Phải dùng headed để tránh bot detection
-    channel: 'chrome',             // Dùng Chrome thật, không phải Chromium
+  const browser = await chromium.launch({
+    headless: false, // Phải dùng headed để tránh bot detection
     args: [
       '--disable-blink-features=AutomationControlled',
       '--no-sandbox',
+      // Đẩy cửa sổ ra ngoài vùng nhìn thấy của màn hình chính (vẫn "headed" thật,
+      // chỉ là không che màn hình khi crawl chạy lâu/nhiều tab)
+      '--window-position=2500,0',
+      '--window-size=1280,900',
     ],
+  });
+
+  const context = await browser.newContext({
+    storageState: fs.existsSync(config.SESSION_FILE) ? config.SESSION_FILE : undefined,
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     viewport: { width: 1280, height: 900 },
     locale: 'vi-VN',
     timezoneId: 'Asia/Ho_Chi_Minh',
-    // Không block permissions để Facebook hoạt động bình thường
   });
 
-  return browser;
+  const page = await context.newPage();
+  await page.goto('https://www.facebook.com', { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2000);
+
+  // c_user là cookie Facebook chỉ set khi đăng nhập thật, đáng tin hơn việc dò DOM
+  // (DOM "Log In" vẫn hiện trên trang xem công khai dù đã hết phiên đăng nhập)
+  async function hasLoginCookie() {
+    const cookies = await context.cookies('https://www.facebook.com');
+    return cookies.some(c => c.name === 'c_user' && c.value);
+  }
+
+  const loggedIn = await hasLoginCookie();
+
+  if (!loggedIn) {
+    console.log('[Browser] Chưa đăng nhập. Hãy đăng nhập vào Chrome vừa mở.');
+    console.log('           Script sẽ tự phát hiện khi đăng nhập xong (chờ tối đa 5 phút)...');
+
+    const deadline = Date.now() + 5 * 60 * 1000;
+    let confirmed = false;
+    while (Date.now() < deadline) {
+      await page.waitForTimeout(3000);
+      const ok = await hasLoginCookie().catch(() => false);
+      if (ok) { confirmed = true; break; }
+    }
+
+    if (confirmed) {
+      await context.storageState({ path: config.SESSION_FILE });
+      console.log('[Browser] Đăng nhập thành công, đã lưu session vào ' + config.SESSION_FILE);
+    } else {
+      console.log('[Browser] Hết thời gian chờ, vẫn chưa phát hiện đăng nhập thành công.');
+    }
+  } else {
+    console.log('[Browser] Đã đăng nhập sẵn (dùng session.json)');
+  }
+
+  await page.close().catch(() => {});
+
+  // Đóng context cũng phải đóng luôn process browser bên dưới
+  const closeContext = context.close.bind(context);
+  context.close = async () => {
+    await closeContext();
+    await browser.close();
+  };
+
+  return context;
 }
 
 module.exports = { crawlGroupFeed, launchBrowser, mergePosts };

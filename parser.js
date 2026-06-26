@@ -14,6 +14,17 @@ function dig(obj, ...keys) {
   return cur;
 }
 
+function groupIdFromGroupUrl(groupUrl) {
+  try {
+    const url = new URL(groupUrl, 'https://www.facebook.com');
+    const parts = url.pathname.split('/').filter(Boolean);
+    const groupIdx = parts.indexOf('groups');
+    if (groupIdx >= 0 && parts[groupIdx + 1]) return parts[groupIdx + 1];
+  } catch (_) {}
+  const fallback = String(groupUrl).split('?')[0].split('/groups/')[1] || '';
+  return fallback.replace(/\/$/, '');
+}
+
 /**
  * Parse newline-delimited JSON từ GraphQL streaming response
  * Facebook trả về nhiều JSON objects trên nhiều dòng
@@ -127,7 +138,7 @@ function parseStory(storyNode, groupUrl, groupName) {
   const postUrl = storyNode.permalink_url
     || storyNode.wwwURL
     || dig(storyNode, 'comet_sections', 'context_layout', 'story', 'comet_sections', 'metadata', 0, 'story', 'url')
-    || `https://www.facebook.com/groups/${groupUrl.split('/groups/')[1]}/posts/${postId}/`;
+    || `https://www.facebook.com/groups/${groupIdFromGroupUrl(groupUrl)}/posts/${postId}/`;
 
   // ── Metrics ──
   // Đào sâu vào feedback UFI để lấy count
@@ -254,7 +265,9 @@ function parseComment(commentNode, postUrl, parentId = null) {
 
   if (!resolvedParentId && depth > 0) {
     // Thử lấy từ comment_direct_parent
-    resolvedParentId = dig(commentNode, 'comment_direct_parent', 'legacy_fbid') || '';
+    resolvedParentId = dig(commentNode, 'comment_direct_parent', 'legacy_fbid')
+      || dig(commentNode, 'comment_direct_parent', 'id')
+      || '';
 
     // Fallback: parse từ legacy_token
     // legacy_token = "PARENT_ID_COMMENT_ID", parent là phần trước dấu _ cuối
@@ -294,6 +307,22 @@ function parseComment(commentNode, postUrl, parentId = null) {
   };
 }
 
+function collectCommentEdges(edges, postUrl, parentCommentId, comments) {
+  if (!Array.isArray(edges)) return;
+
+  for (const edge of edges) {
+    const node = edge && edge.node;
+    if (!node) continue;
+
+    const c = parseComment(node, postUrl, parentCommentId);
+    if (c) comments.push(c);
+
+    // Một số response top-level nhúng sẵn reply ở feedback.replies_connection.
+    const nestedReplyEdges = dig(node, 'feedback', 'replies_connection', 'edges');
+    collectCommentEdges(nestedReplyEdges, postUrl, c ? c.comment_id : null, comments);
+  }
+}
+
 /**
  * Parse comment feed response (top-level comments hoặc replies)
  * Returns { comments, nextCursor }
@@ -311,13 +340,7 @@ function parseCommentResponse(responseText, postUrl, parentCommentId = null) {
       chunk, 'data', 'node', 'comment_rendering_instance_for_feed_location', 'comments', 'edges'
     );
     if (Array.isArray(feedLocationEdges)) {
-      for (const edge of feedLocationEdges) {
-        const node = edge && edge.node;
-        if (node) {
-          const c = parseComment(node, postUrl, null);
-          if (c) comments.push(c);
-        }
-      }
+      collectCommentEdges(feedLocationEdges, postUrl, null, comments);
       const pi = dig(
         chunk, 'data', 'node',
         'comment_rendering_instance_for_feed_location', 'comments', 'page_info'
@@ -331,13 +354,7 @@ function parseCommentResponse(responseText, postUrl, parentCommentId = null) {
       chunk, 'data', 'node', 'comment_rendering_instance', 'comments', 'edges'
     );
     if (Array.isArray(commentEdges)) {
-      for (const edge of commentEdges) {
-        const node = edge && edge.node;
-        if (node) {
-          const c = parseComment(node, postUrl, null);
-          if (c) comments.push(c);
-        }
-      }
+      collectCommentEdges(commentEdges, postUrl, null, comments);
       const pi = dig(chunk, 'data', 'node', 'comment_rendering_instance', 'comments', 'page_info');
       if (pi && pi.has_next_page) nextCursor = pi.end_cursor;
     }
@@ -346,13 +363,7 @@ function parseCommentResponse(responseText, postUrl, parentCommentId = null) {
     // data.node.replies_connection.edges
     const replyEdges = dig(chunk, 'data', 'node', 'replies_connection', 'edges');
     if (Array.isArray(replyEdges)) {
-      for (const edge of replyEdges) {
-        const node = edge && edge.node;
-        if (node) {
-          const c = parseComment(node, postUrl, parentCommentId);
-          if (c) comments.push(c);
-        }
-      }
+      collectCommentEdges(replyEdges, postUrl, parentCommentId, comments);
       const pi = dig(chunk, 'data', 'node', 'replies_connection', 'page_info');
       if (pi && pi.has_next_page) nextCursor = pi.end_cursor;
     }

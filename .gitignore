@@ -9,6 +9,7 @@ yarn-error.log*
 
 data/
 storageState.json
+session.json
 *.log
 *.tmp
 

@@ -11,6 +11,8 @@ function isGraphQL(url) {
   return url.includes('/api/graphql') || url.includes('/graphql');
 }
 
+const BLOCKED_TYPES = new Set(['image', 'media']);
+
 /**
  * Merge comments, dedup theo comment_id
  */
@@ -21,6 +23,68 @@ function mergeComments(existing, incoming) {
     if (!map.has(c.comment_id)) map.set(c.comment_id, c);
   }
   return Array.from(map.values());
+}
+
+async function selectAllComments(page) {
+  try {
+    const selected = await page.evaluate(async () => {
+      const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+      const buttonSelector = 'div[role="button"], span[role="button"], [aria-haspopup="menu"]';
+      const optionSelector = '[role="menuitem"], [role="option"], div[role="button"], span[role="button"]';
+      const sortTexts = [
+        'Most relevant',
+        'Newest',
+        'All comments',
+        'Phù hợp nhất',
+        'Mới nhất',
+        'Tất cả bình luận',
+      ];
+      const allTexts = ['All comments', 'Tất cả bình luận'];
+
+      const textOf = el => (el.textContent || '').replace(/\s+/g, ' ').trim();
+      const visible = el => {
+        const rect = el.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
+
+      const directOption = Array.from(document.querySelectorAll(optionSelector))
+        .find(el => visible(el) && allTexts.some(text => textOf(el).includes(text)));
+      if (directOption) {
+        directOption.click();
+        await sleep(500);
+        return 'direct-all-comments';
+      }
+
+      const sortButton = Array.from(document.querySelectorAll(buttonSelector))
+        .find(el => visible(el) && sortTexts.some(text => textOf(el).includes(text)));
+      if (!sortButton) return '';
+
+      sortButton.click();
+      await sleep(600);
+
+      const options = Array.from(document.querySelectorAll(optionSelector)).filter(visible);
+      const allOption = options.find(el => allTexts.some(text => textOf(el).includes(text)));
+      if (allOption) {
+        allOption.click();
+        await sleep(500);
+        return 'all-comments';
+      }
+
+      // Facebook thường để All comments là lựa chọn thứ 3 trong menu sort.
+      if (options[2]) {
+        options[2].click();
+        await sleep(500);
+        return 'third-option';
+      }
+
+      return '';
+    });
+
+    if (selected) {
+      console.log(`    → Đã chọn All comments (${selected})`);
+      await page.waitForTimeout(config.COMMENT_CLICK_WAIT_MS);
+    }
+  } catch (_) {}
 }
 
 /**
@@ -34,6 +98,15 @@ async function crawlPostComments(browser, post) {
   let allComments = [];
 
   try {
+    await page.route('**/*', (route) => {
+      const type = route.request().resourceType();
+      if (BLOCKED_TYPES.has(type)) {
+        route.abort();
+      } else {
+        route.continue();
+      }
+    });
+
     // ── Intercept GraphQL để bắt comment responses ──
     page.on('response', async (response) => {
       const url = response.url();
@@ -56,7 +129,7 @@ async function crawlPostComments(browser, post) {
       timeout: config.POST_LOAD_TIMEOUT,
     });
 
-    await page.waitForTimeout(2500);
+    await page.waitForTimeout(config.COMMENT_INITIAL_WAIT_MS);
 
     // ── Click "View all X comments" nếu có ──
     try {
@@ -70,11 +143,13 @@ async function crawlPostComments(browser, post) {
         const btn = await page.$(sel);
         if (btn) {
           await btn.click();
-          await page.waitForTimeout(2000);
+          await page.waitForTimeout(config.COMMENT_CLICK_WAIT_MS);
           break;
         }
       }
     } catch (_) {}
+
+    await selectAllComments(page);
 
     // ── Scroll để load thêm comments ──
     let loadMoreAttempts = 0;
@@ -97,13 +172,13 @@ async function crawlPostComments(browser, post) {
 
       if (!loadMoreClicked) break;
 
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(config.COMMENT_CLICK_WAIT_MS);
       loadMoreAttempts++;
     }
 
     // Scroll để load replies
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(config.COMMENT_CLICK_WAIT_MS);
 
     // ── Expand replies ──
     // Click tất cả "X replies" buttons để load replies
@@ -128,12 +203,12 @@ async function crawlPostComments(browser, post) {
       });
 
       if (expanded === 0) break;
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(config.COMMENT_CLICK_WAIT_MS);
       replyAttempts++;
     }
 
     // Chờ lần cuối để bắt hết responses
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(config.COMMENT_FINAL_WAIT_MS);
 
   } catch (err) {
     console.error(`  [ERROR] crawlPostComments (${post.post_id}): ${err.message}`);
@@ -157,7 +232,9 @@ async function crawlComments(browser, postsToUpdate, existingComments = []) {
     return existingComments;
   }
 
+  const concurrency = Math.max(1, Number(config.COMMENT_CONCURRENCY || 1));
   console.log(`\n[Phase 2] Crawl comment cho ${postsToUpdate.length} posts...`);
+  console.log(`[Phase 2] Comment concurrency: ${concurrency}`);
 
   // Tách comments theo post_url để rebuild sau
   const commentsByPost = new Map();
@@ -168,23 +245,28 @@ async function crawlComments(browser, postsToUpdate, existingComments = []) {
   }
 
   let totalNew = 0;
+  let nextIndex = 0;
 
-  for (let i = 0; i < postsToUpdate.length; i++) {
-    const post = postsToUpdate[i];
-    console.log(`  [${i + 1}/${postsToUpdate.length}] Post ${post.post_id} (${post.comment} comments expected)`);
+  async function worker(workerId) {
+    while (nextIndex < postsToUpdate.length) {
+      const i = nextIndex++;
+      const post = postsToUpdate[i];
+      console.log(`  [${i + 1}/${postsToUpdate.length}] [W${workerId}] Post ${post.post_id} (${post.comment} comments expected)`);
 
-    const newComments = await crawlPostComments(browser, post);
-    console.log(`    → Thu thập được ${newComments.length} comments`);
+      const newComments = await crawlPostComments(browser, post);
+      console.log(`    [W${workerId}] → Thu thập được ${newComments.length} comments`);
 
-    // Ghi đè comments của post này (Phase 2 luôn overwrite)
-    commentsByPost.set(post.post_url, newComments);
-    totalNew += newComments.length;
+      commentsByPost.set(post.post_url, newComments);
+      totalNew += newComments.length;
 
-    // Delay giữa các posts để tránh rate limit
-    if (i < postsToUpdate.length - 1) {
-      await new Promise(r => setTimeout(r, config.COMMENT_DELAY_MS));
+      if (config.COMMENT_DELAY_MS > 0) {
+        await new Promise(r => setTimeout(r, config.COMMENT_DELAY_MS));
+      }
     }
   }
+
+  const workerCount = Math.min(concurrency, postsToUpdate.length);
+  await Promise.all(Array.from({ length: workerCount }, (_, i) => worker(i + 1)));
 
   // Gộp tất cả comments lại
   const allComments = [];

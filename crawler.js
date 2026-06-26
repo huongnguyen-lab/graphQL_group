@@ -4,7 +4,57 @@ const config      = require('./config');
 const { crawlGroupFeed, launchBrowser } = require('./phase1-feed');
 const { crawlComments }  = require('./phase2-comments');
 const { loadSnapshot, updateSnapshot, needsCommentCrawl } = require('./snapshot');
-const { writePosts, writeComments, groupIdFromUrl } = require('./writer');
+const { writePosts, writeComments, loadPosts, loadComments, groupIdFromUrl } = require('./writer');
+
+async function runCommentPhase(browser, groupUrl, posts, oldSnapshot) {
+  const postsToUpdate = config.FORCE_COMMENT_CRAWL
+    ? posts
+    : posts.filter(p => needsCommentCrawl(p, oldSnapshot));
+  const limitedPosts = config.COMMENT_POST_LIMIT > 0
+    ? postsToUpdate.slice(0, config.COMMENT_POST_LIMIT)
+    : postsToUpdate;
+  console.log(`\n[Phase 2] ${postsToUpdate.length}/${posts.length} posts cần crawl/re-crawl comment`);
+  if (limitedPosts.length !== postsToUpdate.length) {
+    console.log(`[Phase 2] COMMENT_POST_LIMIT=${config.COMMENT_POST_LIMIT}, chỉ crawl ${limitedPosts.length} posts lượt này`);
+  }
+
+  if (limitedPosts.length > 0) {
+    const existingComments = loadComments(groupUrl);
+    console.log(`[Phase 2] Đã load ${existingComments.length} comments cũ từ CSV`);
+
+    const allComments = await crawlComments(browser, limitedPosts, existingComments);
+    await writeComments(groupUrl, allComments);
+  } else {
+    console.log('[Phase 2] Tất cả posts không thay đổi, bỏ qua crawl comment');
+  }
+
+  if (postsToUpdate.length === 0) return posts;
+  if (limitedPosts.length === postsToUpdate.length) return posts;
+  return limitedPosts;
+}
+
+async function processGroupCommentsOnly(browser, groupUrl) {
+  const groupId = groupIdFromUrl(groupUrl);
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`GROUP: ${groupId} (comments only)`);
+  console.log('='.repeat(60));
+
+  const oldSnapshot = loadSnapshot(groupId);
+  console.log(`[snapshot] Đã load ${oldSnapshot.size} posts từ snapshot cũ`);
+
+  const posts = loadPosts(groupUrl);
+  console.log(`[Comments Only] Đã load ${posts.length} posts từ CSV`);
+  if (posts.length === 0) {
+    console.log('[Comments Only] Không có posts CSV, bỏ qua group này');
+    return;
+  }
+
+  const postsToSnapshot = await runCommentPhase(browser, groupUrl, posts, oldSnapshot);
+
+  const newSnapshot = updateSnapshot(groupId, postsToSnapshot, oldSnapshot);
+  console.log(`[snapshot] Đã cập nhật snapshot: ${newSnapshot.size} posts tổng cộng`);
+  console.log(`\n✓ Hoàn thành group: ${groupId}`);
+}
 
 /**
  * Chạy pipeline đầy đủ cho một group
@@ -37,24 +87,15 @@ async function processGroup(browser, groupUrl) {
   // Ghi posts CSV
   await writePosts(groupUrl, posts);
 
-  // Update snapshot
-  const newSnapshot = updateSnapshot(groupId, posts, oldSnapshot);
-  console.log(`[snapshot] Đã cập nhật snapshot: ${newSnapshot.size} posts tổng cộng`);
-
   // ─────────────────────────────────────────────────────────
   // PHASE 2: Crawl comments
   // ─────────────────────────────────────────────────────────
 
-  // Xác định posts nào cần crawl comment
-  const postsToUpdate = posts.filter(p => needsCommentCrawl(p, oldSnapshot));
-  console.log(`\n[Phase 2] ${postsToUpdate.length}/${posts.length} posts cần crawl/re-crawl comment`);
+  const postsToSnapshot = await runCommentPhase(browser, groupUrl, posts, oldSnapshot);
 
-  if (postsToUpdate.length > 0) {
-    const allComments = await crawlComments(browser, postsToUpdate);
-    await writeComments(groupUrl, allComments);
-  } else {
-    console.log('[Phase 2] Tất cả posts không thay đổi, bỏ qua crawl comment');
-  }
+  // Update snapshot sau Phase 2 để lần sau không bỏ qua bài khi comment crawl chưa chạy.
+  const newSnapshot = updateSnapshot(groupId, postsToSnapshot, oldSnapshot);
+  console.log(`[snapshot] Đã cập nhật snapshot: ${newSnapshot.size} posts tổng cộng`);
 
   console.log(`\n✓ Hoàn thành group: ${groupId}`);
 }
@@ -69,6 +110,7 @@ async function main() {
   console.log(`DATE_TO   : ${config.DATE_TO.toISOString()}`);
   console.log(`Groups    : ${config.GROUP_URLS.length}`);
   console.log(`Concurrency: ${config.PAGE_CONCURRENCY}`);
+  console.log(`Mode      : ${config.COMMENTS_ONLY ? 'comments only' : 'full'}`);
 
   let browser;
   try {
@@ -78,7 +120,8 @@ async function main() {
     const groups = [...config.GROUP_URLS];
     while (groups.length > 0) {
       const batch = groups.splice(0, config.PAGE_CONCURRENCY);
-      await Promise.all(batch.map(url => processGroup(browser, url)));
+      const fn = config.COMMENTS_ONLY ? processGroupCommentsOnly : processGroup;
+      await Promise.all(batch.map(url => fn(browser, url)));
     }
 
   } catch (err) {

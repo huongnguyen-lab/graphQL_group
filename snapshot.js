@@ -52,6 +52,7 @@ function saveSnapshot(groupId, snapshotMap) {
 function needsCommentCrawl(post, oldSnapshot) {
   const old = oldSnapshot.get(post.post_id);
   if (!old) return true; // post mới, chưa có trong snapshot
+  if (!old.comments_crawled) return true; // snapshot cũ/chưa xác nhận crawl comment xong
 
   // So sánh comment count
   if (Number(post.comment) !== Number(old.comment)) return true;
@@ -79,6 +80,7 @@ function updateSnapshot(groupId, posts, existingSnapshot) {
       reaction:     post.reaction,
       share:        post.share,
       comment:      post.comment,
+      comments_crawled: true,
       last_crawled: now,
     });
   }
