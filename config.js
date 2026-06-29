@@ -10,7 +10,7 @@ const SESSION_FILE = path.join(__dirname, 'session.json');
 // ─── Date Range ────────────────────────────────────────────────────────────────
 // Chỉ lấy bài trong khoảng thời gian này
 const DATE_FROM = new Date('2026-06-01T00:00:00+07:00'); // bài từ ngày này
-const DATE_TO   = new Date('2026-06-25T23:59:59+07:00'); // đến ngày này
+const DATE_TO   = new Date('2026-06-29T23:59:59+07:00'); // đến ngày này
 
 // ─── Group URLs ────────────────────────────────────────────────────────────────
 const GROUP_URLS = [
@@ -18,7 +18,7 @@ const GROUP_URLS = [
   // 'https://www.facebook.com/groups/tuvanbaohiemnhanthovn',
   'https://www.facebook.com/groups/hoireviewbaohiem',
   // 'https://www.facebook.com/groups/1596589817017884',
-  // // 'https://www.facebook.com/groups/436672700169975', // baohiemvatchat
+  // 'https://www.facebook.com/groups/436672700169975', // baohiemvatchat
   // 'https://www.facebook.com/groups/1365136861495831',
   // 'https://www.facebook.com/groups/congdongtuvanvienbaohiem',
   // 'https://www.facebook.com/groups/591670618953174',
@@ -41,12 +41,15 @@ const STOP_AFTER_OLD_POSTS = Number(process.env.STOP_AFTER_OLD_POSTS || 0);   //
 const STOP_AFTER_NO_NEW_SCROLLS = Number(process.env.STOP_AFTER_NO_NEW_SCROLLS || 60); // 0 = không dừng khi đứng post
 
 // ─── Comment Settings ──────────────────────────────────────────────────────────
-const COMMENT_DELAY_MS       = Number(process.env.COMMENT_DELAY_MS || 200);  // delay giữa mỗi post khi crawl comment
-const MAX_COMMENT_PAGES      = Number(process.env.MAX_COMMENT_PAGES || 10);  // số page comment tối đa mỗi post
-const COMMENT_CONCURRENCY    = Number(process.env.COMMENT_CONCURRENCY || 5); // số post crawl comment song song
-const COMMENT_INITIAL_WAIT_MS = Number(process.env.COMMENT_INITIAL_WAIT_MS || 1200);
-const COMMENT_CLICK_WAIT_MS   = Number(process.env.COMMENT_CLICK_WAIT_MS || 700);
-const COMMENT_FINAL_WAIT_MS   = Number(process.env.COMMENT_FINAL_WAIT_MS || 500);
+const COMMENT_DELAY_MS       = Number(process.env.COMMENT_DELAY_MS || 800);  // delay giữa mỗi post khi crawl comment
+const MAX_COMMENT_PAGES      = Number(process.env.MAX_COMMENT_PAGES || 40);  // số vòng load/scroll comment tối đa mỗi post
+const COMMENT_CONCURRENCY    = Number(process.env.COMMENT_CONCURRENCY || 6); // số post crawl comment song song
+const COMMENT_INITIAL_WAIT_MS = Number(process.env.COMMENT_INITIAL_WAIT_MS || 2500);
+const COMMENT_CLICK_WAIT_MS   = Number(process.env.COMMENT_CLICK_WAIT_MS || 1800);
+const COMMENT_FINAL_WAIT_MS   = Number(process.env.COMMENT_FINAL_WAIT_MS || 2000);
+const COMMENT_STABLE_ROUNDS   = Number(process.env.COMMENT_STABLE_ROUNDS || 5);
+const COMMENT_REPLY_ROUNDS    = Number(process.env.COMMENT_REPLY_ROUNDS || 12);
+const COMMENT_WRITE_EACH_POST = process.env.COMMENT_WRITE_EACH_POST !== '0';
 const COMMENTS_ONLY           = process.env.COMMENTS_ONLY === '1';
 const FORCE_COMMENT_CRAWL     = process.env.FORCE_COMMENT_CRAWL === '1';
 const COMMENT_POST_LIMIT      = Number(process.env.COMMENT_POST_LIMIT || 0); // 0 = không giới hạn
@@ -75,6 +78,9 @@ module.exports = {
   COMMENT_INITIAL_WAIT_MS,
   COMMENT_CLICK_WAIT_MS,
   COMMENT_FINAL_WAIT_MS,
+  COMMENT_STABLE_ROUNDS,
+  COMMENT_REPLY_ROUNDS,
+  COMMENT_WRITE_EACH_POST,
   COMMENTS_ONLY,
   FORCE_COMMENT_CRAWL,
   COMMENT_POST_LIMIT,

@@ -2,12 +2,16 @@
 
 const fs   = require('fs');
 const path = require('path');
-const { SNAPSHOTS_DIR } = require('./config');
+const { DATA_DIR, SNAPSHOTS_DIR } = require('./config');
 
 /**
  * Tên file snapshot cho một group
  */
 function snapshotPath(groupId) {
+  return path.join(DATA_DIR, groupId, 'post_state.json');
+}
+
+function legacySnapshotPath(groupId) {
   return path.join(SNAPSHOTS_DIR, `${groupId}_snapshot.json`);
 }
 
@@ -16,8 +20,9 @@ function snapshotPath(groupId) {
  * Returns Map<postId, {reaction, share, comment, last_crawled}>
  */
 function loadSnapshot(groupId) {
-  const fp = snapshotPath(groupId);
-  if (!fs.existsSync(fp)) return new Map();
+  const fp = [snapshotPath(groupId), legacySnapshotPath(groupId)]
+    .find(candidate => fs.existsSync(candidate));
+  if (!fp) return new Map();
   try {
     const raw = fs.readFileSync(fp, 'utf-8');
     const obj = JSON.parse(raw);
@@ -33,14 +38,16 @@ function loadSnapshot(groupId) {
  * @param {Map<string, object>} snapshotMap
  */
 function saveSnapshot(groupId, snapshotMap) {
-  if (!fs.existsSync(SNAPSHOTS_DIR)) {
-    fs.mkdirSync(SNAPSHOTS_DIR, { recursive: true });
+  const fp = snapshotPath(groupId);
+  const dir = path.dirname(fp);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
   const obj = {};
   for (const [k, v] of snapshotMap.entries()) {
     obj[k] = v;
   }
-  fs.writeFileSync(snapshotPath(groupId), JSON.stringify(obj, null, 2));
+  fs.writeFileSync(fp, JSON.stringify(obj, null, 2));
 }
 
 /**

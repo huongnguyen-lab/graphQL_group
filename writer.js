@@ -3,7 +3,7 @@
 const fs   = require('fs');
 const path = require('path');
 const { createObjectCsvWriter } = require('csv-writer');
-const { POSTS_DIR, COMMENTS_DIR, GROUPS_DIR } = require('./config');
+const { DATA_DIR, POSTS_DIR, COMMENTS_DIR, GROUPS_DIR } = require('./config');
 
 /**
  * Đảm bảo thư mục output tồn tại
@@ -46,7 +46,50 @@ function oneLineRecord(record) {
   for (const [key, value] of Object.entries(record)) {
     out[key] = oneLine(value);
   }
+  if (Object.prototype.hasOwnProperty.call(out, 'parent_id')) {
+    out.parent_id = cleanCommentId(out.parent_id);
+  }
+  if (Object.prototype.hasOwnProperty.call(out, 'comment_id')) {
+    out.comment_id = cleanCommentId(out.comment_id);
+  }
   return out;
+}
+
+function decodeBase64Id(value) {
+  const raw = String(value || '').trim();
+  if (!raw || !/^[A-Za-z0-9+/=_-]+$/.test(raw)) return '';
+
+  try {
+    const normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
+    return Buffer.from(normalized, 'base64').toString('utf8');
+  } catch (_) {
+    return '';
+  }
+}
+
+function cleanCommentId(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (/^\d+$/.test(raw)) return raw;
+
+  const decoded = decodeBase64Id(raw);
+  const source = decoded || raw;
+  const matches = source.match(/\d+/g);
+  return matches && matches.length ? matches[matches.length - 1] : raw;
+}
+
+function groupDir(groupUrlOrId) {
+  return path.join(DATA_DIR, groupIdFromUrl(groupUrlOrId));
+}
+
+function groupCommentsDir(groupUrlOrId) {
+  return path.join(groupDir(groupUrlOrId), 'comments');
+}
+
+function postIdFromComment(comment) {
+  const url = comment.post_url || comment.Post_URL || '';
+  const match = String(url).match(/\/posts\/([^/?#]+)/);
+  return match ? match[1] : '';
 }
 
 function parseCsvLine(line) {
@@ -125,9 +168,10 @@ function csvRowsToObjects(rows) {
  * @returns {string} đường dẫn file CSV
  */
 async function writePosts(groupUrl, posts) {
-  ensureDir(POSTS_DIR);
   const groupId  = groupIdFromUrl(groupUrl);
-  const filePath = path.join(POSTS_DIR, `${groupId}_posts.csv`);
+  const outputDir = groupDir(groupUrl);
+  ensureDir(outputDir);
+  const filePath = path.join(outputDir, 'posts.csv');
 
   if (posts.length === 0) {
     console.log(`  [writer] Không có post nào để ghi cho ${groupId}`);
@@ -174,6 +218,7 @@ async function writePosts(groupUrl, posts) {
 function loadComments(groupUrl) {
   const groupId  = groupIdFromUrl(groupUrl);
   const filePath = [
+    path.join(groupDir(groupUrl), 'comments.csv'),
     path.join(COMMENTS_DIR, `${groupId}_comments.csv`),
     path.join(GROUPS_DIR, `${groupId}_comments.csv`),
   ].find(fp => fs.existsSync(fp));
@@ -201,6 +246,7 @@ function loadComments(groupUrl) {
 function loadPosts(groupUrl) {
   const groupId  = groupIdFromUrl(groupUrl);
   const filePath = [
+    path.join(groupDir(groupUrl), 'posts.csv'),
     path.join(POSTS_DIR, `${groupId}_posts.csv`),
     path.join(GROUPS_DIR, `${groupId}_posts.csv`),
   ].find(fp => fs.existsSync(fp));
@@ -237,9 +283,12 @@ function loadPosts(groupUrl) {
  * @returns {string} đường dẫn file CSV
  */
 async function writeComments(groupUrl, comments) {
-  ensureDir(COMMENTS_DIR);
   const groupId  = groupIdFromUrl(groupUrl);
-  const filePath = path.join(COMMENTS_DIR, `${groupId}_comments.csv`);
+  const outputDir = groupDir(groupUrl);
+  const perPostDir = groupCommentsDir(groupUrl);
+  ensureDir(outputDir);
+  ensureDir(perPostDir);
+  const filePath = path.join(outputDir, 'comments.csv');
 
   if (comments.length === 0) {
     console.log(`  [writer] Không có comment nào để ghi cho ${groupId}`);
@@ -270,8 +319,44 @@ async function writeComments(groupUrl, comments) {
   }).map(oneLineRecord);
 
   await writer.writeRecords(sortedComments);
+  const commentsByPost = new Map();
+  for (const comment of sortedComments) {
+    const postId = postIdFromComment(comment);
+    if (!postId) continue;
+    if (!commentsByPost.has(postId)) commentsByPost.set(postId, []);
+    commentsByPost.get(postId).push(comment);
+  }
+
+  await Promise.all([...commentsByPost.entries()].map(async ([postId, postComments]) => {
+    const postWriter = createObjectCsvWriter({
+      path: path.join(perPostDir, `${postId}.csv`),
+      header: [
+        { id: 'date',       title: 'Date'       },
+        { id: 'comment_id', title: 'Comment_ID' },
+        { id: 'parent_id',  title: 'Parent_ID'  },
+        { id: 'level',      title: 'Level'      },
+        { id: 'author',     title: 'Author'     },
+        { id: 'content',    title: 'Content'    },
+        { id: 'permalink',  title: 'Permalink'  },
+        { id: 'post_url',   title: 'Post_URL'   },
+      ],
+      encoding: 'utf8',
+      append: false,
+    });
+    await postWriter.writeRecords(postComments);
+  }));
+
   console.log(`  [writer] Đã ghi ${comments.length} comments → ${filePath}`);
+  console.log(`  [writer] Đã ghi ${commentsByPost.size} file comment theo post → ${perPostDir}`);
   return filePath;
 }
 
-module.exports = { writePosts, writeComments, loadPosts, loadComments, groupIdFromUrl };
+module.exports = {
+  writePosts,
+  writeComments,
+  loadPosts,
+  loadComments,
+  groupIdFromUrl,
+  groupDir,
+  groupCommentsDir,
+};

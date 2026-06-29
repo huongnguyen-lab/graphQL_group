@@ -25,6 +25,44 @@ function groupIdFromGroupUrl(groupUrl) {
   return fallback.replace(/\/$/, '');
 }
 
+function decodeBase64Id(value) {
+  const raw = String(value || '').trim();
+  if (!raw || !/^[A-Za-z0-9+/=_-]+$/.test(raw)) return '';
+
+  try {
+    const normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
+    return Buffer.from(normalized, 'base64').toString('utf8');
+  } catch (_) {
+    return '';
+  }
+}
+
+function cleanCommentId(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (/^\d+$/.test(raw)) return raw;
+
+  const decoded = decodeBase64Id(raw);
+  const source = decoded || raw;
+  const matches = source.match(/\d+/g);
+  return matches && matches.length ? matches[matches.length - 1] : raw;
+}
+
+function parentIdFromPermalink(permalink, currentCommentId = '') {
+  if (!permalink) return '';
+  try {
+    const url = new URL(permalink, 'https://www.facebook.com');
+    const replyCommentId = cleanCommentId(url.searchParams.get('reply_comment_id') || '');
+    const commentId = cleanCommentId(url.searchParams.get('comment_id') || '');
+    if (replyCommentId && replyCommentId !== currentCommentId && replyCommentId !== commentId) {
+      return replyCommentId;
+    }
+    return commentId && commentId !== currentCommentId ? commentId : '';
+  } catch (_) {
+    return '';
+  }
+}
+
 /**
  * Parse newline-delimited JSON từ GraphQL streaming response
  * Facebook trả về nhiều JSON objects trên nhiều dòng
@@ -43,6 +81,122 @@ function parseGraphQLBody(text) {
     }
   }
   return results;
+}
+
+function metricNumber(value) {
+  if (value == null) return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'object') {
+    if (typeof value.count !== 'undefined') return metricNumber(value.count);
+    if (typeof value.total_count !== 'undefined') return metricNumber(value.total_count);
+  }
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const normalized = raw
+    .replace(/\s+/g, '')
+    .replace(/,/g, '.')
+    .toLowerCase();
+  const match = normalized.match(/([\d.]+)(k|m|tr|n|nghìn|ngan|triệu|trieu)?/i);
+  if (!match) return null;
+
+  const base = Number(match[1]);
+  if (!Number.isFinite(base)) return null;
+
+  const suffix = match[2] || '';
+  if (suffix === 'k' || suffix === 'n' || suffix === 'nghìn' || suffix === 'ngan') {
+    return Math.round(base * 1000);
+  }
+  if (suffix === 'm' || suffix === 'tr' || suffix === 'triệu' || suffix === 'trieu') {
+    return Math.round(base * 1000000);
+  }
+  return Math.round(base);
+}
+
+function pushMetricCandidate(candidate, candidates) {
+  if (!candidate || typeof candidate !== 'object') return;
+
+  const hasMetric =
+    candidate.reaction_count
+    || candidate.share_count
+    || candidate.comment_count
+    || candidate.comment_rendering_instance
+    || candidate.comments_count_summary_renderer
+    || candidate.i18n_reaction_count
+    || candidate.i18n_share_count
+    || candidate.i18n_comment_count;
+
+  if (hasMetric) candidates.push(candidate);
+}
+
+function collectMetricCandidates(obj, candidates = [], seen = new Set()) {
+  if (!obj || typeof obj !== 'object' || seen.has(obj)) return candidates;
+  seen.add(obj);
+
+  pushMetricCandidate(obj, candidates);
+
+  if (Array.isArray(obj)) {
+    for (const item of obj) collectMetricCandidates(item, candidates, seen);
+    return candidates;
+  }
+
+  for (const value of Object.values(obj)) {
+    collectMetricCandidates(value, candidates, seen);
+  }
+  return candidates;
+}
+
+function maxMetric(values) {
+  const nums = values
+    .map(metricNumber)
+    .filter(v => v != null && Number.isFinite(v));
+  return nums.length ? Math.max(...nums) : 0;
+}
+
+function extractStoryMetrics(storyNode) {
+  const directUfi = dig(
+    storyNode,
+    'comet_sections', 'feedback', 'story',
+    'story_ufi_container', 'story',
+    'feedback_context', 'feedback_target_with_context',
+    'comet_ufi_summary_and_actions_renderer', 'feedback'
+  );
+
+  const targetWithContext = dig(
+    storyNode,
+    'comet_sections', 'feedback', 'story',
+    'story_ufi_container', 'story',
+    'feedback_context', 'feedback_target_with_context'
+  );
+
+  const candidates = [];
+  pushMetricCandidate(directUfi, candidates);
+  pushMetricCandidate(dig(directUfi, 'comments_count_summary_renderer', 'feedback'), candidates);
+  pushMetricCandidate(targetWithContext, candidates);
+  pushMetricCandidate(dig(targetWithContext, 'comet_ufi_summary_and_actions_renderer', 'feedback'), candidates);
+  pushMetricCandidate(storyNode.feedback, candidates);
+  collectMetricCandidates(storyNode, candidates);
+
+  const reaction = maxMetric(candidates.flatMap(c => [
+    c.reaction_count,
+    c.i18n_reaction_count,
+    dig(c, 'top_reactions', 'edges', 0, 'reaction_count'),
+  ]));
+
+  const share = maxMetric(candidates.flatMap(c => [
+    c.share_count,
+    c.i18n_share_count,
+  ]));
+
+  const comment = maxMetric(candidates.flatMap(c => [
+    c.comment_count,
+    c.i18n_comment_count,
+    dig(c, 'comment_rendering_instance', 'comments', 'total_count'),
+    dig(c, 'comments_count_summary_renderer', 'feedback', 'comment_rendering_instance', 'comments', 'total_count'),
+  ]));
+
+  return { reaction, share, comment };
 }
 
 // ─── Post Parser ───────────────────────────────────────────────────────────────
@@ -141,18 +295,9 @@ function parseStory(storyNode, groupUrl, groupName) {
     || `https://www.facebook.com/groups/${groupIdFromGroupUrl(groupUrl)}/posts/${postId}/`;
 
   // ── Metrics ──
-  // Đào sâu vào feedback UFI để lấy count
-  const ufiStory = dig(
-    storyNode,
-    'comet_sections', 'feedback', 'story',
-    'story_ufi_container', 'story',
-    'feedback_context', 'feedback_target_with_context',
-    'comet_ufi_summary_and_actions_renderer', 'feedback'
-  );
-
-  const reactionCount = dig(ufiStory, 'reaction_count', 'count') || 0;
-  const shareCount    = dig(ufiStory, 'share_count', 'count')    || 0;
-  const commentCount  = dig(ufiStory, 'comment_rendering_instance', 'comments', 'total_count') || 0;
+  // Facebook hay đổi vị trí UFI metrics giữa các GraphQL variant, nên dò rộng
+  // trong Story và lấy count tốt nhất thay vì phụ thuộc một path cố định.
+  const metrics = extractStoryMetrics(storyNode);
 
   // ── Images ──
   const imageUrls = [];
@@ -194,9 +339,9 @@ function parseStory(storyNode, groupUrl, groupName) {
     group_url:    resolvedGroupUrl,
     author_name:  authorName,
     author_url:   authorUrl,
-    reaction:     reactionCount,
-    share:        shareCount,
-    comment:      commentCount,
+    reaction:     metrics.reaction,
+    share:        metrics.share,
+    comment:      metrics.comment,
     post_url:     postUrl,
     image_urls:   imageUrls.join('|'),  // join bằng | để dễ đưa vào CSV
     video_url:    videoUrl || '',
@@ -236,7 +381,7 @@ function parseGroupFeedResponse(responseText, groupUrl, groupName) {
 function parseComment(commentNode, postUrl, parentId = null) {
   if (!commentNode) return null;
 
-  const commentId = commentNode.legacy_fbid;
+  const commentId = cleanCommentId(commentNode.legacy_fbid || commentNode.id);
   if (!commentId) return null;
 
   // ── Timestamp ──
@@ -258,28 +403,6 @@ function parseComment(commentNode, postUrl, parentId = null) {
   // ── Depth / Level ──
   const depth = commentNode.depth || 0;
 
-  // ── Parent ID ──
-  // legacy_token format: "post_id_comment_id" cho top-level
-  // hoặc "parent_comment_id_reply_comment_id" cho reply
-  let resolvedParentId = parentId || '';
-
-  if (!resolvedParentId && depth > 0) {
-    // Thử lấy từ comment_direct_parent
-    resolvedParentId = dig(commentNode, 'comment_direct_parent', 'legacy_fbid')
-      || dig(commentNode, 'comment_direct_parent', 'id')
-      || '';
-
-    // Fallback: parse từ legacy_token
-    // legacy_token = "PARENT_ID_COMMENT_ID", parent là phần trước dấu _ cuối
-    if (!resolvedParentId && commentNode.legacy_token) {
-      const parts = commentNode.legacy_token.split('_');
-      if (parts.length >= 2) {
-        // Lấy tất cả trừ phần cuối = parent id
-        resolvedParentId = parts.slice(0, -1).join('_');
-      }
-    }
-  }
-
   // ── Permalink ──
   let permalink = '';
   // Từ feedback.url (chính xác nhất)
@@ -291,6 +414,24 @@ function parseComment(commentNode, postUrl, parentId = null) {
       if (link.__typename === 'XFBCommentTimeStampActionLink') {
         permalink = dig(link, 'comment', 'url') || '';
         break;
+      }
+    }
+  }
+
+  // ── Parent ID ──
+  // Parent_ID luôn là numeric legacy comment id. Top-level để trống.
+  let resolvedParentId = '';
+  if (depth > 0) {
+    resolvedParentId = cleanCommentId(parentId)
+      || cleanCommentId(dig(commentNode, 'comment_direct_parent', 'legacy_fbid'))
+      || cleanCommentId(dig(commentNode, 'comment_direct_parent', 'id'))
+      || parentIdFromPermalink(permalink, commentId);
+
+    // legacy_token thường có dạng "post_id_parent_id_reply_id"; parent là số áp cuối.
+    if (!resolvedParentId && commentNode.legacy_token) {
+      const parts = String(commentNode.legacy_token).split('_').filter(Boolean);
+      if (parts.length >= 2) {
+        resolvedParentId = cleanCommentId(parts[parts.length - 2]);
       }
     }
   }

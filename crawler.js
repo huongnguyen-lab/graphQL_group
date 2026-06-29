@@ -22,7 +22,14 @@ async function runCommentPhase(browser, groupUrl, posts, oldSnapshot) {
     const existingComments = loadComments(groupUrl);
     console.log(`[Phase 2] Đã load ${existingComments.length} comments cũ từ CSV`);
 
-    const allComments = await crawlComments(browser, limitedPosts, existingComments);
+    const allComments = await crawlComments(browser, limitedPosts, existingComments, {
+      onProgressWrite: config.COMMENT_WRITE_EACH_POST
+        ? async (comments, post, postComments) => {
+            await writeComments(groupUrl, comments);
+            console.log(`    [writer] Progress saved sau post ${post.post_id}: ${postComments.length} comments`);
+          }
+        : null,
+    });
     await writeComments(groupUrl, allComments);
   } else {
     console.log('[Phase 2] Tất cả posts không thay đổi, bỏ qua crawl comment');

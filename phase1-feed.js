@@ -39,6 +39,26 @@ function inDateRange(post, dateFrom, dateTo) {
 /**
  * Merge posts, giữ bản có nhiều data nhất khi trùng post_id
  */
+function metricScore(post) {
+  return ['reaction', 'share', 'comment']
+    .reduce((sum, key) => sum + (Number(post[key]) > 0 ? 1 : 0), 0);
+}
+
+function hasValue(value) {
+  return value !== '' && value !== 0 && value != null;
+}
+
+function mergePostRecord(oldPost, newPost) {
+  const merged = { ...oldPost };
+  for (const [key, value] of Object.entries(newPost)) {
+    if (!hasValue(value)) continue;
+    if (['reaction', 'share', 'comment'].includes(key) || !hasValue(merged[key])) {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
 function mergePosts(existing, incoming) {
   const map = new Map();
 
@@ -51,7 +71,19 @@ function mergePosts(existing, incoming) {
     if (!old) {
       map.set(p.post_id, p);
     } else {
-      // Giữ bản có nhiều field non-empty hơn
+      // Ưu tiên bản có metrics vì GraphQL feed có thể trả cùng post ở nhiều variant.
+      const oldMetricScore = metricScore(old);
+      const newMetricScore = metricScore(p);
+      if (newMetricScore > oldMetricScore) {
+        map.set(p.post_id, mergePostRecord(old, p));
+        continue;
+      }
+
+      if (newMetricScore < oldMetricScore) {
+        continue;
+      }
+
+      // Nếu metrics tương đương, giữ bản có nhiều field non-empty hơn.
       const oldScore  = Object.values(old).filter(v => v !== '' && v !== 0).length;
       const newScore  = Object.values(p).filter(v => v !== '' && v !== 0).length;
       if (newScore > oldScore) map.set(p.post_id, p);
