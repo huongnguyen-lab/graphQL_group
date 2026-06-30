@@ -364,6 +364,8 @@ async function expandAllReplies(page, maxRounds = 8) {
 
 async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getCollectedCount = () => 0) {
   let stableRounds = 0;
+  let stagnantDataRounds = 0;
+  let unproductiveClickRounds = 0;
   const maxSteps =
     expectedCommentCount > 0 && expectedCommentCount <= 20
       ? Math.max(24, config.MAX_COMMENT_PAGES)
@@ -425,12 +427,32 @@ async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getColle
       stableRounds = 0;
     }
 
+    if (noNewArticles && noNewGraphQL && noClicks) {
+      stagnantDataRounds += 1;
+    } else {
+      stagnantDataRounds = 0;
+    }
+
+    if (noNewGraphQL && clickedComments + clickedReplies > 0 && after.moreButtons === 0) {
+      unproductiveClickRounds += 1;
+    } else {
+      unproductiveClickRounds = 0;
+    }
+
     const nearExpected =
       expectedCommentCount > 0 &&
       Math.max(after.commentCount, gqlAfter) >= Math.max(1, expectedCommentCount - 1);
 
     if (nearExpected && after.moreButtons === 0) break;
     if (stableRounds >= Math.min(config.COMMENT_STABLE_ROUNDS, 4)) break;
+    if (stagnantDataRounds >= config.COMMENT_STABLE_ROUNDS) {
+      console.log(`    ↳ dừng sớm: dữ liệu không tăng trong ${stagnantDataRounds} vòng`);
+      break;
+    }
+    if (unproductiveClickRounds >= config.COMMENT_STABLE_ROUNDS) {
+      console.log(`    ↳ dừng sớm: click không tạo thêm GraphQL trong ${unproductiveClickRounds} vòng`);
+      break;
+    }
   }
 
   for (let i = 0; i < 3; i++) {
@@ -606,8 +628,13 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
       const newComments = await crawlPostComments(browser, post);
       console.log(`    [W${workerId}] → Thu thập được ${newComments.length} comments`);
 
-      commentsByPost.set(post.post_url, newComments);
-      totalNew += newComments.length;
+      const oldComments = commentsByPost.get(post.post_url) || [];
+      if (newComments.length < oldComments.length) {
+        console.log(`    [W${workerId}] Giữ bản cũ ${oldComments.length} comments vì retry chỉ lấy ${newComments.length}`);
+      } else {
+        commentsByPost.set(post.post_url, newComments);
+        totalNew += newComments.length;
+      }
 
       if (typeof options.onProgressWrite === 'function') {
         const snapshotComments = flattenCommentsMap(commentsByPost);

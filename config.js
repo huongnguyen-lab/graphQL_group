@@ -53,6 +53,10 @@ const COMMENT_WRITE_EACH_POST = process.env.COMMENT_WRITE_EACH_POST !== '0';
 const COMMENTS_ONLY           = process.env.COMMENTS_ONLY === '1';
 const FORCE_COMMENT_CRAWL     = process.env.FORCE_COMMENT_CRAWL === '1';
 const COMMENT_POST_LIMIT      = Number(process.env.COMMENT_POST_LIMIT || 0); // 0 = không giới hạn
+const COMMENT_POST_IDS        = (process.env.COMMENT_POST_IDS || '')
+  .split(/[,\s]+/)
+  .map(s => s.trim())
+  .filter(Boolean);
 
 // ─── Paths ─────────────────────────────────────────────────────────────────────
 const DATA_DIR      = path.join(__dirname, 'data');
@@ -84,6 +88,7 @@ module.exports = {
   COMMENTS_ONLY,
   FORCE_COMMENT_CRAWL,
   COMMENT_POST_LIMIT,
+  COMMENT_POST_IDS,
   DATA_DIR,
   POSTS_DIR,
   COMMENTS_DIR,

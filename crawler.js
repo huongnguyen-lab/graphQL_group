@@ -7,9 +7,21 @@ const { loadSnapshot, updateSnapshot, needsCommentCrawl } = require('./snapshot'
 const { writePosts, writeComments, loadPosts, loadComments, groupIdFromUrl } = require('./writer');
 
 async function runCommentPhase(browser, groupUrl, posts, oldSnapshot) {
-  const postsToUpdate = config.FORCE_COMMENT_CRAWL
+  let postsToUpdate = config.FORCE_COMMENT_CRAWL
     ? posts
     : posts.filter(p => needsCommentCrawl(p, oldSnapshot));
+
+  if (config.COMMENT_POST_IDS.length > 0) {
+    const wantedIds = new Set(config.COMMENT_POST_IDS);
+    const beforeFilter = postsToUpdate.length;
+    postsToUpdate = postsToUpdate.filter(p => wantedIds.has(String(p.post_id)));
+    const missingIds = config.COMMENT_POST_IDS.filter(id => !posts.some(p => String(p.post_id) === id));
+    console.log(`[Phase 2] COMMENT_POST_IDS=${config.COMMENT_POST_IDS.length}, lọc ${beforeFilter} → ${postsToUpdate.length} posts`);
+    if (missingIds.length > 0) {
+      console.warn(`[Phase 2] Không tìm thấy ${missingIds.length} post_id trong posts.csv: ${missingIds.join(', ')}`);
+    }
+  }
+
   const limitedPosts = config.COMMENT_POST_LIMIT > 0
     ? postsToUpdate.slice(0, config.COMMENT_POST_LIMIT)
     : postsToUpdate;
