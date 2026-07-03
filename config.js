@@ -6,17 +6,18 @@ const path = require('path');
 // Lần đầu chạy: chưa có file này, script sẽ mở Chrome và chờ bạn đăng nhập tay
 // rồi tự lưu cookie/login vào đây. Các lần chạy sau dùng lại session này luôn.
 const SESSION_FILE = path.join(__dirname, 'session.json');
+const BROWSER_HEADLESS = process.env.BROWSER_HEADLESS === '1';
 
 // ─── Date Range ────────────────────────────────────────────────────────────────
 // Chỉ lấy bài trong khoảng thời gian này
 const DATE_FROM = new Date('2026-06-01T00:00:00+07:00'); // bài từ ngày này
-const DATE_TO   = new Date('2026-06-29T23:59:59+07:00'); // đến ngày này
+const DATE_TO   = new Date('2026-06-30T23:59:59+07:00'); // đến ngày này
 
 // ─── Group URLs ────────────────────────────────────────────────────────────────
 const GROUP_URLS = [
-  // 'http://facebook.com/groups/baohiemprudentialvietnam',
-  // 'https://www.facebook.com/groups/tuvanbaohiemnhanthovn',
-  'https://www.facebook.com/groups/hoireviewbaohiem',
+  'http://facebook.com/groups/baohiemprudentialvietnam',
+  'https://www.facebook.com/groups/tuvanbaohiemnhanthovn',
+  // 'https://www.facebook.com/groups/hoireviewbaohiem',
   // 'https://www.facebook.com/groups/1596589817017884',
   // 'https://www.facebook.com/groups/436672700169975', // baohiemvatchat
   // 'https://www.facebook.com/groups/1365136861495831',
@@ -36,7 +37,7 @@ const PAGE_CONCURRENCY = 1;
 // ─── Scroll Settings ───────────────────────────────────────────────────────────
 const SCROLL_DELAY_MS     = Number(process.env.SCROLL_DELAY_MS || 2500);      // delay giữa mỗi lần scroll (ms)
 const SCROLL_MAX_ATTEMPTS = Number(process.env.SCROLL_MAX_ATTEMPTS || 250);   // số lần scroll tối đa mỗi group
-const POST_LOAD_TIMEOUT   = 15000; // timeout chờ post load (ms)
+const POST_LOAD_TIMEOUT   = Number(process.env.POST_LOAD_TIMEOUT || 30000); // timeout chờ post load (ms)
 const STOP_AFTER_OLD_POSTS = Number(process.env.STOP_AFTER_OLD_POSTS || 0);   // 0 = không dừng sớm theo bài cũ
 const STOP_AFTER_NO_NEW_SCROLLS = Number(process.env.STOP_AFTER_NO_NEW_SCROLLS || 60); // 0 = không dừng khi đứng post
 
@@ -67,6 +68,7 @@ const SNAPSHOTS_DIR = path.join(DATA_DIR, 'snapshots');
 
 module.exports = {
   SESSION_FILE,
+  BROWSER_HEADLESS,
   DATE_FROM,
   DATE_TO,
   GROUP_URLS,

@@ -43,13 +43,22 @@ async function runCommentPhase(browser, groupUrl, posts, oldSnapshot) {
         : null,
     });
     await writeComments(groupUrl, allComments);
+    const crawledPostIds = new Set((allComments.crawledPostIds || []).map(String));
+    runCommentPhase.lastCrawledPostIds = crawledPostIds;
   } else {
     console.log('[Phase 2] Tất cả posts không thay đổi, bỏ qua crawl comment');
+    runCommentPhase.lastCrawledPostIds = new Set();
   }
 
   if (postsToUpdate.length === 0) return posts;
-  if (limitedPosts.length === postsToUpdate.length) return posts;
-  return limitedPosts;
+  const crawledPostIds = runCommentPhase.lastCrawledPostIds || new Set();
+  const crawledPosts = limitedPosts.filter(p => crawledPostIds.has(String(p.post_id)));
+  console.log(`[Phase 2] Snapshot sẽ cập nhật ${crawledPosts.length}/${limitedPosts.length} posts đã crawl thành công`);
+  if (limitedPosts.length === postsToUpdate.length) {
+    const untouchedPosts = posts.filter(p => !postsToUpdate.some(u => u.post_id === p.post_id));
+    return untouchedPosts.concat(crawledPosts);
+  }
+  return crawledPosts;
 }
 
 async function processGroupCommentsOnly(browser, groupUrl) {

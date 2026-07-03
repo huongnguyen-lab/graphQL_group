@@ -61,12 +61,8 @@ function needsCommentCrawl(post, oldSnapshot) {
   if (!old) return true; // post mới, chưa có trong snapshot
   if (!old.comments_crawled) return true; // snapshot cũ/chưa xác nhận crawl comment xong
 
-  // So sánh comment count
-  if (Number(post.comment) !== Number(old.comment)) return true;
-  // So sánh reaction count (optional — comment count là chỉ số chính)
-  if (Number(post.reaction) !== Number(old.reaction)) return true;
-  // So sánh share count
-  if (Number(post.share) !== Number(old.share)) return true;
+  // Với post cũ, chỉ crawl lại khi số comment mới lớn hơn snapshot cũ.
+  if (Number(post.comment) > Number(old.comment)) return true;
 
   return false;
 }

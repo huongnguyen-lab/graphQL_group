@@ -53,7 +53,8 @@ async function selectAllComments(page) {
           && style.visibility !== 'hidden';
       };
       const textOf = el => (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
-      const node = Array.from(document.querySelectorAll('div[role="button"], span[role="button"]'))
+      const root = document.querySelector('div[role="dialog"]:not([aria-label])') || document;
+      const node = Array.from(root.querySelectorAll('div[role="button"], span[role="button"]'))
         .find(el => visible(el) && labels.some(label => textOf(el) === label || textOf(el).includes(label)));
       return node ? textOf(node) : '';
     });
@@ -70,23 +71,38 @@ async function selectAllComments(page) {
 
     let selected = '';
     for (let attempt = 0; attempt < 5 && !selected; attempt++) {
-      const opener = page.locator([
-        'div[role="button"]:has-text("Most relevant")',
-        'div[role="button"]:has-text("Newest")',
-        'div[role="button"]:has-text("Phù hợp nhất")',
-        'div[role="button"]:has-text("Mới nhất")',
-        'span[role="button"]:has-text("Most relevant")',
-        'span[role="button"]:has-text("Newest")',
-        'span[role="button"]:has-text("Phù hợp nhất")',
-        'span[role="button"]:has-text("Mới nhất")',
-      ].join(', ')).first();
+      const opened = await page.evaluate(() => {
+        const labels = [
+          'Most relevant',
+          'Newest',
+          'Phù hợp nhất',
+          'Mới nhất',
+        ];
+        const visible = el => {
+          const rect = el.getBoundingClientRect();
+          const style = getComputedStyle(el);
+          return rect.width > 0
+            && rect.height > 0
+            && style.display !== 'none'
+            && style.visibility !== 'hidden';
+        };
+        const textOf = el => (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
+        const root = document.querySelector('div[role="dialog"]:not([aria-label])');
+        if (!root) return false;
 
-      if (await opener.isVisible().catch(() => false)) {
-        await opener.scrollIntoViewIfNeeded().catch(() => {});
-        await opener.click({ force: true, timeout: 5000 }).catch(() => {});
+        const opener = Array.from(root.querySelectorAll('div[role="button"], span[role="button"]'))
+          .find(el => visible(el) && labels.some(label => textOf(el) === label || textOf(el).includes(label)));
+        if (!opener) return false;
+
+        opener.scrollIntoView({ block: 'center', inline: 'nearest' });
+        opener.click();
+        return true;
+      });
+
+      if (opened) {
         await page.waitForTimeout(Math.max(1200, config.COMMENT_CLICK_WAIT_MS));
       } else {
-        await page.mouse.wheel(0, 450);
+        await scrollCommentAreaToBottom(page);
         await page.waitForTimeout(config.COMMENT_CLICK_WAIT_MS);
         continue;
       }
@@ -236,24 +252,22 @@ async function getCommentAreaStats(page) {
       return null;
     };
 
-    const findFallbackRoot = () =>
-      Array.from(document.querySelectorAll('div, main, section'))
-        .filter(el => {
-          const style = getComputedStyle(el);
-          return visible(el)
-            && el.scrollHeight > el.clientHeight + 50
-            && el.clientHeight > 100
-            && ['auto', 'scroll'].includes(style.overflowY);
-        })
-        .sort((a, b) => (b.scrollHeight - b.clientHeight) - (a.scrollHeight - a.clientHeight))[0]
-      || document.scrollingElement
-      || document.documentElement;
-
     const dialog = document.querySelector('div[role="dialog"]:not([aria-label])');
     const firstDivContainsHtmlDiv = dialog ? findFirstDivContainingHtmlDiv(dialog) : null;
     const dialogRoot = firstDivContainsHtmlDiv ? getDivChildren(firstDivContainsHtmlDiv)[1] || null : null;
-    const root = dialogRoot || findFallbackRoot();
-    const scope = dialogRoot && dialog ? dialog : root || document;
+    const root = dialogRoot;
+    const scope = dialogRoot && dialog ? dialog : null;
+
+    if (!root || !scope) {
+      return {
+        found: false,
+        commentCount: 0,
+        scrollTop: 0,
+        scrollHeight: 0,
+        clientHeight: 0,
+        moreButtons: 0,
+      };
+    }
 
     const clickableNodes = Array.from(
       scope.querySelectorAll ? scope.querySelectorAll('div[role="button"], span, div') : []
@@ -310,24 +324,21 @@ async function scrollCommentAreaToBottom(page) {
       return null;
     };
 
-    const findFallbackRoot = () =>
-      Array.from(document.querySelectorAll('div, main, section'))
-        .filter(el => {
-          const style = getComputedStyle(el);
-          return visible(el)
-            && el.scrollHeight > el.clientHeight + 50
-            && el.clientHeight > 100
-            && ['auto', 'scroll'].includes(style.overflowY);
-        })
-        .sort((a, b) => (b.scrollHeight - b.clientHeight) - (a.scrollHeight - a.clientHeight))[0]
-      || document.scrollingElement
-      || document.documentElement;
-
     const dialog = document.querySelector('div[role="dialog"]:not([aria-label])');
     const firstDivContainsHtmlDiv = dialog ? findFirstDivContainingHtmlDiv(dialog) : null;
     const root = firstDivContainsHtmlDiv
-      ? getDivChildren(firstDivContainsHtmlDiv)[1] || findFallbackRoot()
-      : findFallbackRoot();
+      ? getDivChildren(firstDivContainsHtmlDiv)[1] || null
+      : null;
+
+    if (!root) {
+      return {
+        found: false,
+        moved: 0,
+        scrollTop: 0,
+        scrollHeight: 0,
+        clientHeight: 0,
+      };
+    }
 
     const before = root.scrollTop || window.scrollY;
     root.scrollBy(0, 2500);
@@ -336,6 +347,7 @@ async function scrollCommentAreaToBottom(page) {
     root.dispatchEvent(new Event('scroll', { bubbles: true }));
 
     return {
+      found: true,
       moved: (root.scrollTop || window.scrollY) - before,
       scrollTop: root.scrollTop || window.scrollY,
       scrollHeight: root.scrollHeight || document.body.scrollHeight,
@@ -377,7 +389,7 @@ async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getColle
 
     if (!before.found) {
       console.log('    ⚠️ Không tìm thấy vùng comment dialog');
-      break;
+      return false;
     }
 
     await scrollCommentAreaToBottom(page);
@@ -469,6 +481,7 @@ async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getColle
     await scrollCommentAreaToBottom(page);
     await page.waitForTimeout(900);
   }
+  return true;
 }
 
 async function scrollComments(page) {
@@ -519,8 +532,13 @@ async function scrollComments(page) {
  * @returns {object[]} array of comment objects
  */
 async function crawlPostComments(browser, post) {
+  if (Number(post.comment || 0) <= 0) {
+    return [];
+  }
+
   const page = await browser.newPage();
   let allComments = [];
+  let failed = false;
 
   try {
     await page.route('**/*', (route) => {
@@ -576,17 +594,22 @@ async function crawlPostComments(browser, post) {
 
     await selectAllComments(page);
 
-    await scrollAndLoadAllComments(page, Number(post.comment || 0), () => allComments.length);
+    const foundCommentArea = await scrollAndLoadAllComments(page, Number(post.comment || 0), () => allComments.length);
+    if (!foundCommentArea && Number(post.comment || 0) > 0) {
+      failed = true;
+    }
 
     // Chờ lần cuối để bắt hết responses
     await page.waitForTimeout(config.COMMENT_FINAL_WAIT_MS);
 
   } catch (err) {
+    failed = true;
     console.error(`  [ERROR] crawlPostComments (${post.post_id}): ${err.message}`);
   } finally {
     await page.close();
   }
 
+  if (failed) return null;
   return allComments;
 }
 
@@ -618,6 +641,7 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
   let totalNew = 0;
   let nextIndex = 0;
   let writeQueue = Promise.resolve();
+  const crawledPostIds = new Set();
 
   async function worker(workerId) {
     while (nextIndex < postsToUpdate.length) {
@@ -626,7 +650,12 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
       console.log(`  [${i + 1}/${postsToUpdate.length}] [W${workerId}] Post ${post.post_id} (${post.comment} comments expected)`);
 
       const newComments = await crawlPostComments(browser, post);
+      if (newComments === null) {
+        console.log(`    [W${workerId}] Bỏ qua post ${post.post_id} vì lỗi load, chưa đánh dấu crawl xong`);
+        continue;
+      }
       console.log(`    [W${workerId}] → Thu thập được ${newComments.length} comments`);
+      crawledPostIds.add(String(post.post_id));
 
       const oldComments = commentsByPost.get(post.post_url) || [];
       if (newComments.length < oldComments.length) {
@@ -656,6 +685,7 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
 
   // Gộp tất cả comments lại
   const allComments = flattenCommentsMap(commentsByPost);
+  allComments.crawledPostIds = Array.from(crawledPostIds);
 
   console.log(`[Phase 2] Hoàn thành. Tổng comments: ${allComments.length} (${totalNew} mới/updated)`);
   return allComments;

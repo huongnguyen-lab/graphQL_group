@@ -37,15 +37,66 @@ function decodeBase64Id(value) {
   }
 }
 
+function numericParts(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return [];
+  const decoded = decodeBase64Id(raw);
+  const source = decoded || raw;
+  return source.match(/\d+/g) || [];
+}
+
 function cleanCommentId(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
   if (/^\d+$/.test(raw)) return raw;
 
-  const decoded = decodeBase64Id(raw);
-  const source = decoded || raw;
-  const matches = source.match(/\d+/g);
+  const matches = numericParts(raw);
   return matches && matches.length ? matches[matches.length - 1] : raw;
+}
+
+function postIdFromPostUrl(postUrl) {
+  try {
+    const url = new URL(postUrl, 'https://www.facebook.com');
+    const pathMatch = url.pathname.match(/\/posts\/(\d+)/);
+    if (pathMatch) return pathMatch[1];
+    const storyFbid = url.searchParams.get('story_fbid');
+    if (storyFbid && /^\d+$/.test(storyFbid)) return storyFbid;
+  } catch (_) {}
+  const fallback = String(postUrl || '').match(/\/posts\/(\d+)/);
+  return fallback ? fallback[1] : '';
+}
+
+function postIdFromPermalink(permalink) {
+  try {
+    const url = new URL(permalink, 'https://www.facebook.com');
+    const pathMatch = url.pathname.match(/\/posts\/(\d+)/);
+    if (pathMatch) return pathMatch[1];
+    const storyFbid = url.searchParams.get('story_fbid');
+    if (storyFbid && /^\d+$/.test(storyFbid)) return storyFbid;
+  } catch (_) {}
+  const fallback = String(permalink || '').match(/\/posts\/(\d+)/);
+  return fallback ? fallback[1] : '';
+}
+
+function postIdFromCommentNode(commentNode) {
+  const legacyParts = String(commentNode && commentNode.legacy_token || '')
+    .split('_')
+    .filter(part => /^\d+$/.test(part));
+  if (legacyParts.length >= 2) return legacyParts[0];
+
+  for (const value of [
+    commentNode && commentNode.id,
+    commentNode && commentNode.legacy_fbid,
+    dig(commentNode, 'feedback', 'id'),
+  ]) {
+    const parts = numericParts(value);
+    if (parts.length >= 2) return parts[0];
+  }
+
+  const permalink = dig(commentNode, 'feedback', 'url')
+    || dig(commentNode, 'comment_action_links', 0, 'comment', 'url')
+    || '';
+  return postIdFromPermalink(permalink);
 }
 
 function parentIdFromPermalink(permalink, currentCommentId = '') {
@@ -378,11 +429,13 @@ function parseGroupFeedResponse(responseText, groupUrl, groupName) {
 /**
  * Parse một comment node thành clean comment object
  */
-function parseComment(commentNode, postUrl, parentId = null) {
+function parseComment(commentNode, postUrl, parentId = null, targetPostId = '') {
   if (!commentNode) return null;
 
   const commentId = cleanCommentId(commentNode.legacy_fbid || commentNode.id);
   if (!commentId) return null;
+  const commentPostId = postIdFromCommentNode(commentNode);
+  if (targetPostId && commentPostId && commentPostId !== targetPostId) return null;
 
   // ── Timestamp ──
   const createdTime = commentNode.created_time
@@ -448,19 +501,19 @@ function parseComment(commentNode, postUrl, parentId = null) {
   };
 }
 
-function collectCommentEdges(edges, postUrl, parentCommentId, comments) {
+function collectCommentEdges(edges, postUrl, parentCommentId, comments, targetPostId = '') {
   if (!Array.isArray(edges)) return;
 
   for (const edge of edges) {
     const node = edge && edge.node;
     if (!node) continue;
 
-    const c = parseComment(node, postUrl, parentCommentId);
+    const c = parseComment(node, postUrl, parentCommentId, targetPostId);
     if (c) comments.push(c);
 
     // Một số response top-level nhúng sẵn reply ở feedback.replies_connection.
     const nestedReplyEdges = dig(node, 'feedback', 'replies_connection', 'edges');
-    collectCommentEdges(nestedReplyEdges, postUrl, c ? c.comment_id : null, comments);
+    collectCommentEdges(nestedReplyEdges, postUrl, c ? c.comment_id : null, comments, targetPostId);
   }
 }
 
@@ -472,6 +525,7 @@ function parseCommentResponse(responseText, postUrl, parentCommentId = null) {
   const chunks = parseGraphQLBody(responseText);
   const comments = [];
   let nextCursor = null;
+  const targetPostId = postIdFromPostUrl(postUrl);
 
   for (const chunk of chunks) {
 
@@ -481,7 +535,7 @@ function parseCommentResponse(responseText, postUrl, parentCommentId = null) {
       chunk, 'data', 'node', 'comment_rendering_instance_for_feed_location', 'comments', 'edges'
     );
     if (Array.isArray(feedLocationEdges)) {
-      collectCommentEdges(feedLocationEdges, postUrl, null, comments);
+      collectCommentEdges(feedLocationEdges, postUrl, null, comments, targetPostId);
       const pi = dig(
         chunk, 'data', 'node',
         'comment_rendering_instance_for_feed_location', 'comments', 'page_info'
@@ -495,7 +549,7 @@ function parseCommentResponse(responseText, postUrl, parentCommentId = null) {
       chunk, 'data', 'node', 'comment_rendering_instance', 'comments', 'edges'
     );
     if (Array.isArray(commentEdges)) {
-      collectCommentEdges(commentEdges, postUrl, null, comments);
+      collectCommentEdges(commentEdges, postUrl, null, comments, targetPostId);
       const pi = dig(chunk, 'data', 'node', 'comment_rendering_instance', 'comments', 'page_info');
       if (pi && pi.has_next_page) nextCursor = pi.end_cursor;
     }
@@ -504,7 +558,7 @@ function parseCommentResponse(responseText, postUrl, parentCommentId = null) {
     // data.node.replies_connection.edges
     const replyEdges = dig(chunk, 'data', 'node', 'replies_connection', 'edges');
     if (Array.isArray(replyEdges)) {
-      collectCommentEdges(replyEdges, postUrl, parentCommentId, comments);
+      collectCommentEdges(replyEdges, postUrl, parentCommentId, comments, targetPostId);
       const pi = dig(chunk, 'data', 'node', 'replies_connection', 'page_info');
       if (pi && pi.has_next_page) nextCursor = pi.end_cursor;
     }
@@ -519,7 +573,7 @@ function parseCommentResponse(responseText, postUrl, parentCommentId = null) {
       for (const item of inlineComments) {
         const node = item && item.comment;
         if (node) {
-          const c = parseComment(node, postUrl, null);
+          const c = parseComment(node, postUrl, null, targetPostId);
           if (c) comments.push(c);
         }
       }
@@ -535,5 +589,7 @@ module.exports = {
   parseCommentResponse,
   parseStory,
   parseComment,
+  postIdFromPostUrl,
+  postIdFromCommentNode,
   dig,
 };

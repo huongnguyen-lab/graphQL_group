@@ -268,7 +268,7 @@ async function launchBrowser() {
   console.log('[Browser] Khởi động Chrome...');
 
   const browser = await chromium.launch({
-    headless: false, // Phải dùng headed để tránh bot detection
+    headless: config.BROWSER_HEADLESS,
     args: [
       '--disable-blink-features=AutomationControlled',
       '--no-sandbox',
