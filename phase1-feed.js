@@ -292,6 +292,10 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
  */
 async function launchBrowser() {
   console.log('[Browser] Khởi động Chrome...');
+  const windowWidth = Number(process.env.BROWSER_WINDOW_WIDTH || 1280);
+  const windowHeight = Number(process.env.BROWSER_WINDOW_HEIGHT || 900);
+  const windowX = Number(process.env.BROWSER_WINDOW_X || 80);
+  const windowY = Number(process.env.BROWSER_WINDOW_Y || 40);
 
   const browser = await chromium.launch({
     headless: config.BROWSER_HEADLESS,
@@ -299,15 +303,15 @@ async function launchBrowser() {
       '--disable-blink-features=AutomationControlled',
       '--no-sandbox',
       // Mở trong vùng nhìn thấy để lần đầu đăng nhập Facebook dễ thao tác.
-      '--window-position=80,40',
-      '--window-size=1280,900',
+      `--window-position=${windowX},${windowY}`,
+      `--window-size=${windowWidth},${windowHeight}`,
     ],
   });
 
   const context = await browser.newContext({
     storageState: fs.existsSync(config.SESSION_FILE) ? config.SESSION_FILE : undefined,
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    viewport: { width: 1280, height: 900 },
+    viewport: { width: windowWidth, height: windowHeight },
     locale: 'vi-VN',
     timezoneId: 'Asia/Ho_Chi_Minh',
   });

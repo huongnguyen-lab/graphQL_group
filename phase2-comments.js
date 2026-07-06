@@ -696,9 +696,24 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
 
   let totalNew = 0;
   let nextIndex = 0;
+  let completedAttempts = 0;
   let writeQueue = Promise.resolve();
   const crawledPostIds = new Set();
   const failedPostIds = new Set();
+
+  async function maybeReportBatch(post, status) {
+    completedAttempts += 1;
+    if (typeof options.onBatchProgress !== 'function') return;
+    if (completedAttempts % concurrency !== 0 && completedAttempts !== postsToUpdate.length) return;
+    const snapshotComments = flattenCommentsMap(commentsByPost);
+    await options.onBatchProgress(snapshotComments, post, {
+      status,
+      completedAttempts,
+      totalPosts: postsToUpdate.length,
+      concurrency,
+      batchNo: Math.ceil(completedAttempts / concurrency),
+    });
+  }
 
   async function worker(workerId) {
     while (nextIndex < postsToUpdate.length) {
@@ -713,6 +728,7 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
         if (typeof options.onPostAttempt === 'function') {
           await options.onPostAttempt(post, 'failed');
         }
+        await maybeReportBatch(post, 'failed');
         continue;
       }
       console.log(`    [W${workerId}] → Thu thập được ${newComments.length} comments`);
@@ -736,6 +752,8 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
           .then(() => options.onProgressWrite(snapshotComments, post, newComments));
         await writeQueue;
       }
+
+      await maybeReportBatch(post, 'done');
 
       if (config.COMMENT_DELAY_MS > 0) {
         await new Promise(r => setTimeout(r, config.COMMENT_DELAY_MS));

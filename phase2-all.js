@@ -80,6 +80,96 @@ function saveAttemptedPosts(groupUrl, attemptedPosts) {
   });
 }
 
+function countCsvRows(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return 0;
+    const lines = fs.readFileSync(filePath, 'utf8')
+      .split(/\r?\n/)
+      .filter(Boolean).length;
+    return Math.max(0, lines - 1);
+  } catch (_) {
+    return 0;
+  }
+}
+
+function crawlProgressLogPath() {
+  return path.join(config.DATA_DIR, 'phase2-crawl-progress-log.csv');
+}
+
+function crawlProgressStatePath() {
+  return path.join(config.DATA_DIR, 'phase2-crawl-progress-state.json');
+}
+
+function appendCrawlProgressLog(result, post, batchInfo = {}) {
+  ensureDir(config.DATA_DIR);
+
+  const logPath = crawlProgressLogPath();
+  const statePath = crawlProgressStatePath();
+  const state = readJson(statePath, {
+    all_comments_rows: countCsvRows(path.join(__dirname, 'all_comments.csv')),
+    group_comments: {},
+  });
+
+  const allCommentsRows = countCsvRows(path.join(__dirname, 'all_comments.csv'));
+  const previousAllRows = Number(state.all_comments_rows || 0);
+  const allCommentsDelta = allCommentsRows - previousAllRows;
+  const hasPreviousGroupRows = Object.prototype.hasOwnProperty.call(state.group_comments || {}, result.groupId);
+  const previousGroupRows = hasPreviousGroupRows
+    ? Number((state.group_comments || {})[result.groupId] || 0)
+    : Number(result.comments || 0);
+  const groupCommentsDelta = Number(result.comments || 0) - previousGroupRows;
+  const concurrency = Math.max(1, Number(config.COMMENT_CONCURRENCY || 1));
+  const completedAttempts = Number(batchInfo.completedAttempts || result.currentPostIndex || 0);
+  const batchNo = Number(batchInfo.batchNo || Math.ceil(completedAttempts / concurrency));
+  const latestFile = result.filePath || path.join(config.DATA_DIR, result.groupId, 'comments.csv');
+
+  if (!fs.existsSync(logPath)) {
+    fs.writeFileSync(logPath, [
+      'timestamp',
+      'all_comments_rows',
+      'all_comments_delta',
+      'active_group',
+      'group_comments',
+      'group_comments_delta',
+      'comment_concurrency',
+      'batch_no',
+      'completed_attempts_in_group',
+      'candidate_posts',
+      'missing_posts',
+      'underfilled_posts',
+      'last_attempt_status',
+      'current_post_id',
+      'latest_file',
+    ].join(',') + '\n', 'utf8');
+  }
+
+  fs.appendFileSync(logPath, [
+    csvEscape(new Date().toISOString()),
+    allCommentsRows,
+    allCommentsDelta,
+    csvEscape(result.groupId),
+    Number(result.comments || 0),
+    groupCommentsDelta,
+    concurrency,
+    batchNo,
+    completedAttempts,
+    Number(result.candidates || 0),
+    Number(result.missing_posts || 0),
+    Number(result.underfilled_posts || 0),
+    csvEscape(String(batchInfo.status || '')),
+    csvEscape(String((post && post.post_id) || result.currentPostId || '')),
+    csvEscape(latestFile),
+  ].join(',') + '\n', 'utf8');
+
+  state.all_comments_rows = allCommentsRows;
+  state.group_comments = {
+    ...(state.group_comments || {}),
+    [result.groupId]: Number(result.comments || 0),
+  };
+  state.updated_at = new Date().toISOString();
+  writeJson(statePath, state);
+}
+
 function activeGroupIds(results) {
   return results
     .filter(r => r.status === 'running')
@@ -117,7 +207,9 @@ function auditPostCoverage(posts, comments) {
 
 function pickPostsToCrawl(posts, comments, attemptedPosts = new Set()) {
   const audit = auditPostCoverage(posts, comments);
-  let candidates = audit.missingPosts.filter(post => !attemptedPosts.has(String(post.post_id)));
+  let candidates = config.FORCE_COMMENT_CRAWL
+    ? audit.missingPosts
+    : audit.missingPosts.filter(post => !attemptedPosts.has(String(post.post_id)));
 
   if (config.COMMENT_POST_IDS && config.COMMENT_POST_IDS.length > 0) {
     const wanted = new Set(config.COMMENT_POST_IDS.map(String));
@@ -129,6 +221,19 @@ function pickPostsToCrawl(posts, comments, attemptedPosts = new Set()) {
   }
 
   return { audit, candidates };
+}
+
+function targetGroupIds() {
+  return new Set((process.env.PHASE2_GROUP_IDS || '')
+    .split(/[,\s]+/)
+    .map(s => s.trim())
+    .filter(Boolean));
+}
+
+function filterTargetGroupUrls(groupUrls) {
+  const targets = targetGroupIds();
+  if (targets.size === 0) return groupUrls;
+  return groupUrls.filter(groupUrl => targets.has(groupIdFromUrl(groupUrl)));
 }
 
 async function processGroup(browser, groupUrl, results) {
@@ -212,6 +317,19 @@ async function processGroup(browser, groupUrl, results) {
         result.collected_post_count = progressAudit.collectedPostCount;
         writeProgress(results, activeGroupIds(results));
       },
+      onBatchProgress: async (comments, post, batchInfo) => {
+        result.comments = comments.length;
+        result.attempted = Number(batchInfo.completedAttempts || result.attempted || 0);
+        result.currentPostIndex = Number(batchInfo.completedAttempts || result.currentPostIndex || 0);
+        result.currentPostId = String((post && post.post_id) || result.currentPostId || '');
+        result.filePath = result.filePath || path.join(config.DATA_DIR, groupId, 'comments.csv');
+        const progressAudit = auditPostCoverage(posts, comments);
+        result.missing_posts = progressAudit.missingPosts.length;
+        result.underfilled_posts = progressAudit.underfilledPosts.length;
+        result.collected_post_count = progressAudit.collectedPostCount;
+        writeProgress(results, activeGroupIds(results));
+        appendCrawlProgressLog(result, post, batchInfo);
+      },
     });
 
     result.comments = allComments.length;
@@ -285,51 +403,66 @@ function writeMissingPostsReport(groupUrls) {
 async function main() {
   const start = Date.now();
   const results = [];
-  const groupUrls = [...(config.ALL_GROUP_URLS || config.GROUP_URLS)];
+  const groupUrls = filterTargetGroupUrls([...(config.ALL_GROUP_URLS || config.GROUP_URLS)]);
   const ranGroups = loadRanGroups();
+  const groupConcurrency = Math.max(1, Number(process.env.PHASE2_GROUP_CONCURRENCY || 1));
   let browser;
 
   console.log('FB Group Crawler - PHASE 2 ALL GROUPS');
   console.log(`Groups: ${groupUrls.length}`);
+  console.log(`Group concurrency: ${groupConcurrency}`);
   console.log(`Comment concurrency: ${config.COMMENT_CONCURRENCY}`);
   console.log(`Max comment pages: ${config.MAX_COMMENT_PAGES}`);
 
   try {
     browser = await launchBrowser();
-    for (const groupUrl of groupUrls) {
-      const groupId = groupIdFromUrl(groupUrl);
-      if (ranGroups.has(groupId) && process.env.PHASE2_FORCE_RERUN !== '1') {
-        const posts = loadPosts(groupUrl);
-        const comments = loadComments(groupUrl);
-        const audit = auditPostCoverage(posts, comments);
-        results.push({
-          groupId,
-          groupUrl,
-          status: 'already_ran',
-          posts: posts.length,
-          candidates: 0,
-          attempted: loadAttemptedPosts(groupUrl).size,
-          missing_posts: audit.missingPosts.length,
-          underfilled_posts: audit.underfilledPosts.length,
-          expected_comments: audit.expectedComments,
-          collected_post_count: audit.collectedPostCount,
-          comments: comments.length,
-          currentPostId: '',
-          currentPostIndex: 0,
-          started_at: '',
-          finished_at: new Date().toISOString(),
-          filePath: '',
-          error: '',
-        });
-        writeProgress(results, activeGroupIds(results));
-        console.log(`[Phase 2] Skip already ran group ${groupId}`);
-        continue;
-      }
 
-      await processGroup(browser, groupUrl, results);
-      ranGroups.add(groupId);
-      saveRanGroups(ranGroups);
+    let nextGroupIndex = 0;
+    async function runGroupWorker() {
+      while (true) {
+        const groupUrl = groupUrls[nextGroupIndex++];
+        if (!groupUrl) return;
+
+        const groupId = groupIdFromUrl(groupUrl);
+        if (ranGroups.has(groupId) && process.env.PHASE2_FORCE_RERUN !== '1') {
+          const posts = loadPosts(groupUrl);
+          const comments = loadComments(groupUrl);
+          const audit = auditPostCoverage(posts, comments);
+          results.push({
+            groupId,
+            groupUrl,
+            status: 'already_ran',
+            posts: posts.length,
+            candidates: 0,
+            attempted: loadAttemptedPosts(groupUrl).size,
+            missing_posts: audit.missingPosts.length,
+            underfilled_posts: audit.underfilledPosts.length,
+            expected_comments: audit.expectedComments,
+            collected_post_count: audit.collectedPostCount,
+            comments: comments.length,
+            currentPostId: '',
+            currentPostIndex: 0,
+            started_at: '',
+            finished_at: new Date().toISOString(),
+            filePath: '',
+            error: '',
+          });
+          writeProgress(results, activeGroupIds(results));
+          console.log(`[Phase 2] Skip already ran group ${groupId}`);
+          continue;
+        }
+
+        await processGroup(browser, groupUrl, results);
+        ranGroups.add(groupId);
+        saveRanGroups(ranGroups);
+      }
     }
+
+    await Promise.all(Array.from(
+      { length: Math.min(groupConcurrency, groupUrls.length) },
+      () => runGroupWorker()
+    ));
+
     const missingReport = writeMissingPostsReport(groupUrls);
     console.log(`[Phase 2] Missing posts report: ${missingReport.rows} rows -> ${missingReport.filePath}`);
   } catch (err) {
