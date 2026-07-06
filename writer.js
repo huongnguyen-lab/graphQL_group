@@ -173,11 +173,6 @@ async function writePosts(groupUrl, posts) {
   ensureDir(outputDir);
   const filePath = path.join(outputDir, 'posts.csv');
 
-  if (posts.length === 0) {
-    console.log(`  [writer] Không có post nào để ghi cho ${groupId}`);
-    return filePath;
-  }
-
   const writer = createObjectCsvWriter({
     path: filePath,
     header: [

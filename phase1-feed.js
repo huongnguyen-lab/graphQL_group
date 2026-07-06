@@ -112,7 +112,7 @@ function oldestPostDate(posts) {
  * @returns {object[]} array of post objects
  */
 async function crawlGroupFeed(browser, groupUrl, options = {}) {
-  const { dateFrom, dateTo } = options;
+  const { dateFrom, dateTo, onProgressPosts, onProgressScroll } = options;
   const groupId = groupIdFromUrl(groupUrl);
   const feedUrl = chronologicalGroupUrl(groupUrl);
   console.log(`\n[Phase 1] Bắt đầu crawl group: ${groupId}`);
@@ -125,6 +125,18 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
   let lastPostCount = 0;
   let scrollsWithoutNewPosts = 0;
   let groupName = '';
+  let stopReason = 'completed';
+  let progressWrite = Promise.resolve();
+  let lastProgressCount = -1;
+
+  function queueProgressWrite(reason) {
+    if (!onProgressPosts || allPosts.length === lastProgressCount) return;
+    const postsSnapshot = [...allPosts];
+    lastProgressCount = postsSnapshot.length;
+    progressWrite = progressWrite
+      .then(() => onProgressPosts(postsSnapshot, { reason, groupId }))
+      .catch(err => console.error(`  [writer] Progress write failed: ${err.message}`));
+  }
 
   try {
     // ── Block media resources ──
@@ -163,6 +175,7 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
         if (filtered.length > 0) {
           console.log(`  [intercept] Bắt được ${filtered.length} posts từ GraphQL`);
           allPosts = mergePosts(allPosts, filtered);
+          queueProgressWrite('graphql');
         }
 
         // Check nếu có bài cũ hơn DATE_FROM → có thể dừng scroll sớm
@@ -230,6 +243,16 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
         console.log(`  Scroll ${scrollCount}/${config.SCROLL_MAX_ATTEMPTS} — Tổng posts: ${allPosts.length}${oldestText}`);
       }
 
+      if (onProgressScroll && scrollCount % 25 === 0) {
+        await onProgressScroll({
+          groupId,
+          scrollCount,
+          posts: allPosts.length,
+          oldestPostDate: oldestPostDate(allPosts),
+          scrollsWithoutNewPosts,
+        });
+      }
+
       if (
         config.STOP_AFTER_NO_NEW_SCROLLS > 0
         && scrollsWithoutNewPosts >= config.STOP_AFTER_NO_NEW_SCROLLS
@@ -239,12 +262,14 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
       }
 
       // Check nếu đã đến cuối trang
-      const isAtBottom = await page.evaluate(() => {
-        return window.scrollY + window.innerHeight >= document.body.scrollHeight - 200;
-      });
-      if (isAtBottom && scrollCount > 5) {
-        console.log(`  → Đã đến cuối trang sau ${scrollCount} lần scroll`);
-        break;
+      if (config.STOP_AT_PAGE_BOTTOM) {
+        const isAtBottom = await page.evaluate(() => {
+          return window.scrollY + window.innerHeight >= document.body.scrollHeight - 200;
+        });
+        if (isAtBottom && scrollCount > 5) {
+          console.log(`  → Đã đến cuối trang sau ${scrollCount} lần scroll`);
+          break;
+        }
       }
     }
 
@@ -253,6 +278,7 @@ async function crawlGroupFeed(browser, groupUrl, options = {}) {
   } catch (err) {
     console.error(`  [ERROR] crawlGroupFeed: ${err.message}`);
   } finally {
+    await progressWrite;
     await page.close();
   }
 
@@ -272,9 +298,8 @@ async function launchBrowser() {
     args: [
       '--disable-blink-features=AutomationControlled',
       '--no-sandbox',
-      // Đẩy cửa sổ ra ngoài vùng nhìn thấy của màn hình chính (vẫn "headed" thật,
-      // chỉ là không che màn hình khi crawl chạy lâu/nhiều tab)
-      '--window-position=2500,0',
+      // Mở trong vùng nhìn thấy để lần đầu đăng nhập Facebook dễ thao tác.
+      '--window-position=80,40',
       '--window-size=1280,900',
     ],
   });

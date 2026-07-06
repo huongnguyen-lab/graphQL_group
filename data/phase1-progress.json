@@ -1,0 +1,65 @@
+{
+  "updated_at": "2026-07-04T18:57:20.244Z",
+  "date_from": "2024-12-31T17:00:00.000Z",
+  "date_to": "2026-06-30T16:59:59.000Z",
+  "total_groups": 29,
+  "done_groups": 2,
+  "active": [
+    "299861353823440",
+    "7678734688837445"
+  ],
+  "results": [
+    {
+      "groupId": "363194459162467",
+      "groupUrl": "https://www.facebook.com/groups/363194459162467/",
+      "status": "done",
+      "posts": 1967,
+      "scrollCount": 0,
+      "oldestPostDate": "2025-01-03T02:33:24.000Z",
+      "scrollsWithoutNewPosts": 0,
+      "started_at": "2026-07-04T09:30:50.443Z",
+      "finished_at": "2026-07-04T09:31:55.361Z",
+      "filePath": "C:\\Users\\ADMIN\\Downloads\\MinhHuong\\graphQL_group\\data\\363194459162467\\posts.csv",
+      "error": ""
+    },
+    {
+      "groupId": "355902270087463",
+      "groupUrl": "https://www.facebook.com/groups/355902270087463/",
+      "status": "done",
+      "posts": 4534,
+      "scrollCount": 0,
+      "oldestPostDate": "2026-03-20T09:27:29.000Z",
+      "scrollsWithoutNewPosts": 0,
+      "started_at": "2026-07-04T09:30:50.654Z",
+      "finished_at": "2026-07-04T09:31:54.995Z",
+      "filePath": "C:\\Users\\ADMIN\\Downloads\\MinhHuong\\graphQL_group\\data\\355902270087463\\posts.csv",
+      "error": ""
+    },
+    {
+      "groupId": "299861353823440",
+      "groupUrl": "https://www.facebook.com/groups/299861353823440/",
+      "status": "running",
+      "posts": 4702,
+      "scrollCount": 4650,
+      "oldestPostDate": "2025-11-26T03:41:52.000Z",
+      "scrollsWithoutNewPosts": 11,
+      "started_at": "2026-07-04T09:31:55.355Z",
+      "finished_at": "",
+      "filePath": "C:\\Users\\ADMIN\\Downloads\\MinhHuong\\graphQL_group\\data\\299861353823440\\posts.csv",
+      "error": ""
+    },
+    {
+      "groupId": "7678734688837445",
+      "groupUrl": "https://www.facebook.com/groups/7678734688837445/",
+      "status": "running",
+      "posts": 4876,
+      "scrollCount": 5450,
+      "oldestPostDate": "2026-05-24T13:25:25.000Z",
+      "scrollsWithoutNewPosts": 11,
+      "started_at": "2026-07-04T09:31:55.575Z",
+      "finished_at": "",
+      "filePath": "C:\\Users\\ADMIN\\Downloads\\MinhHuong\\graphQL_group\\data\\7678734688837445\\posts.csv",
+      "error": ""
+    }
+  ]
+}
