@@ -56,7 +56,7 @@ while ($true) {
     -WorkingDirectory $Root `
     -RedirectStandardOutput $out `
     -RedirectStandardError $err `
-    -WindowStyle Hidden `
+    -WindowStyle Normal `
     -PassThru
 
   Write-State -Status 'running' -Cycle $cycle -NodePid $proc.Id -Message "Running for up to $RunSeconds seconds."

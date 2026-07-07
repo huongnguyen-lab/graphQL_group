@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 const config = require('./config');
 const { launchBrowser } = require('./phase1-feed');
 const { crawlComments } = require('./phase2-comments');
@@ -62,6 +63,27 @@ function saveRanGroups(ranGroups) {
     updated_at: new Date().toISOString(),
     groups: [...ranGroups].sort(),
   });
+}
+
+function rebuildAllComments() {
+  const result = spawnSync(process.execPath, [path.join(__dirname, 'scripts', 'build-all-comments.js')], {
+    cwd: __dirname,
+    env: {
+      ...process.env,
+      SKIP_ALL_COMMENTS_BACKUP: '1',
+    },
+    encoding: 'utf8',
+  });
+
+  if (result.status !== 0) {
+    const message = (result.stderr || result.stdout || '').trim();
+    console.warn(`[Phase 2] WARN rebuild all_comments.csv failed: ${message}`);
+    return false;
+  }
+
+  const message = (result.stdout || '').trim();
+  if (message) console.log(`[Phase 2] ${message}`);
+  return true;
 }
 
 function attemptedPostsPath(groupUrl) {
@@ -311,6 +333,7 @@ async function processGroup(browser, groupUrl, results) {
         result.attempted = result.currentPostIndex;
         result.comments = comments.length;
         result.filePath = await writeComments(groupUrl, comments);
+        rebuildAllComments();
         const progressAudit = auditPostCoverage(posts, comments);
         result.missing_posts = progressAudit.missingPosts.length;
         result.underfilled_posts = progressAudit.underfilledPosts.length;
@@ -334,6 +357,7 @@ async function processGroup(browser, groupUrl, results) {
 
     result.comments = allComments.length;
     result.filePath = await writeComments(groupUrl, allComments);
+    rebuildAllComments();
     const finalAudit = auditPostCoverage(posts, allComments);
     result.missing_posts = finalAudit.missingPosts.length;
     result.underfilled_posts = finalAudit.underfilledPosts.length;

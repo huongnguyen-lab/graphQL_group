@@ -6,7 +6,7 @@ const path = require('path');
 // Lần đầu chạy: chưa có file này, script sẽ mở Chrome và chờ bạn đăng nhập tay
 // rồi tự lưu cookie/login vào đây. Các lần chạy sau dùng lại session này luôn.
 const SESSION_FILE = path.join(__dirname, 'session.json');
-const BROWSER_HEADLESS = process.env.BROWSER_HEADLESS === '1';
+const BROWSER_HEADLESS = false;
 
 // ─── Date Range ────────────────────────────────────────────────────────────────
 // Chỉ lấy bài trong khoảng thời gian này
@@ -78,12 +78,12 @@ const STOP_AFTER_NO_NEW_SCROLLS = Number(process.env.STOP_AFTER_NO_NEW_SCROLLS |
 const STOP_AT_PAGE_BOTTOM = process.env.STOP_AT_PAGE_BOTTOM === '1';
 
 // ─── Comment Settings ──────────────────────────────────────────────────────────
-const COMMENT_DELAY_MS       = Number(process.env.COMMENT_DELAY_MS || 800);  // delay giữa mỗi post khi crawl comment
+const COMMENT_DELAY_MS       = Number(process.env.COMMENT_DELAY_MS || 4000);  // delay giữa mỗi post khi crawl comment
 const MAX_COMMENT_PAGES      = Number(process.env.MAX_COMMENT_PAGES || 40);  // số vòng load/scroll comment tối đa mỗi post
-const COMMENT_CONCURRENCY    = Number(process.env.COMMENT_CONCURRENCY || 3); // số post crawl comment song song
-const COMMENT_INITIAL_WAIT_MS = Number(process.env.COMMENT_INITIAL_WAIT_MS || 2500);
-const COMMENT_CLICK_WAIT_MS   = Number(process.env.COMMENT_CLICK_WAIT_MS || 1800);
-const COMMENT_FINAL_WAIT_MS   = Number(process.env.COMMENT_FINAL_WAIT_MS || 2000);
+const COMMENT_CONCURRENCY    = Number(process.env.COMMENT_CONCURRENCY || 6); // số post crawl comment song song
+const COMMENT_INITIAL_WAIT_MS = Number(process.env.COMMENT_INITIAL_WAIT_MS || 5000);
+const COMMENT_CLICK_WAIT_MS   = Number(process.env.COMMENT_CLICK_WAIT_MS || 3000);
+const COMMENT_FINAL_WAIT_MS   = Number(process.env.COMMENT_FINAL_WAIT_MS || 3000);
 const COMMENT_STABLE_ROUNDS   = Number(process.env.COMMENT_STABLE_ROUNDS || 5);
 const COMMENT_REPLY_ROUNDS    = Number(process.env.COMMENT_REPLY_ROUNDS || 12);
 const COMMENT_SELECT_ALL      = process.env.COMMENT_SELECT_ALL === '1';

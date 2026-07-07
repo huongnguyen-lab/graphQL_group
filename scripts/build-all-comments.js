@@ -118,8 +118,33 @@ function commentRow(groupId, comment) {
   ];
 }
 
+function rowKey(row) {
+  const groupId = row[0] || '';
+  const commentId = row[2] || '';
+  const postUrl = row[8] || '';
+  if (groupId || commentId || postUrl) return [groupId, commentId, postUrl].join('\u001f');
+  return row.join('\u001f');
+}
+
+function addRow(rows, seen, row) {
+  const key = rowKey(row);
+  if (seen.has(key)) return;
+  seen.add(key);
+  rows.push(row);
+}
+
 function main() {
   const rows = [HEADER];
+  const seen = new Set();
+
+  if (fs.existsSync(OUTPUT_FILE) && process.env.FULL_REBUILD_ALL_COMMENTS !== '1') {
+    const existingRows = parseCsv(fs.readFileSync(OUTPUT_FILE, 'utf8'));
+    for (const row of existingRows.slice(1)) {
+      if (!row.some(value => value !== '')) continue;
+      addRow(rows, seen, row);
+    }
+  }
+
   const groupDirs = fs.readdirSync(DATA_DIR, { withFileTypes: true })
     .filter(entry => entry.isDirectory())
     .map(entry => entry.name)
@@ -137,7 +162,7 @@ function main() {
 
     groupCount++;
     for (const comment of comments) {
-      rows.push(commentRow(groupId, comment));
+      addRow(rows, seen, commentRow(groupId, comment));
     }
   }
 
