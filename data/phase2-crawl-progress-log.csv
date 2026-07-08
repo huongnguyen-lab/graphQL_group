@@ -1,0 +1,27 @@
+timestamp,all_comments_rows,all_comments_delta,active_group,group_comments,group_comments_delta,comment_concurrency,batch_no,completed_attempts_in_group,candidate_posts,missing_posts,underfilled_posts,last_attempt_status,current_post_id,latest_file
+2026-07-08T04:01:21.967Z,131900,0,939853694105892,4474,0,10,1,10,1036,823,141,done,1731093764981877,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:02:21.972Z,131900,0,939853694105892,4474,0,10,2,20,1036,823,141,done,1730761631681757,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:03:22.738Z,131900,0,939853694105892,4474,0,10,3,30,1036,823,141,done,1730759578348629,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:04:23.395Z,131900,0,939853694105892,4474,0,10,4,40,1036,823,141,done,1730582285033025,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:05:26.735Z,131900,0,939853694105892,4474,0,10,5,50,1036,823,141,done,1730418658382721,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:06:35.369Z,131900,0,939853694105892,4474,0,10,6,60,1036,823,141,done,1730681591689761,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:07:53.240Z,131900,0,939853694105892,4474,0,10,7,70,1036,823,141,done,1730679715023282,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:09:08.933Z,131900,0,939853694105892,4474,0,10,8,80,1036,823,141,done,1730677388356848,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:10:26.444Z,131923,23,939853694105892,4497,23,10,9,90,1036,822,142,done,1730676771690243,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:11:49.138Z,131923,0,939853694105892,4497,0,10,10,100,1036,822,142,done,1730675125023741,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:13:08.742Z,131923,0,939853694105892,4497,0,10,11,110,1036,822,142,done,1730674078357179,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:14:34.774Z,131923,0,939853694105892,4497,0,10,12,120,1036,822,142,done,1730634818361105,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:15:34.844Z,131938,15,939853694105892,4512,15,10,13,130,1036,821,143,done,1730404518384135,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:16:41.227Z,131938,0,939853694105892,4512,0,10,14,140,1036,821,143,done,1730406081717312,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:17:59.993Z,131955,17,939853694105892,4529,17,10,15,150,1036,820,144,done,1726437962114124,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:19:02.072Z,131955,0,939853694105892,4529,0,10,16,160,1036,820,144,failed,1726436612114259,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:20:19.829Z,131955,0,939853694105892,4529,0,10,17,170,1036,820,144,done,1726434848781102,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:21:37.575Z,131955,0,939853694105892,4529,0,10,18,180,1036,820,144,done,1726423562115564,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:23:06.674Z,131955,0,939853694105892,4529,0,10,19,190,1036,820,144,done,1726450602112860,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:24:22.396Z,131955,0,939853694105892,4529,0,10,20,200,1036,820,144,done,1726448508779736,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:25:16.147Z,131955,0,939853694105892,4529,0,10,21,210,1036,820,144,failed,1726441662113754,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:29:07.883Z,131956,1,939853694105892,4530,1,10,1,10,1036,820,144,done,1730763121681608,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:29:58.607Z,131956,0,939853694105892,4530,0,10,2,20,1036,820,144,done,1730761631681757,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:31:02.076Z,131956,0,939853694105892,4530,0,10,3,30,1036,820,144,done,1730759845015269,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:31:55.712Z,131957,1,939853694105892,4531,1,10,4,40,1036,820,144,done,1730582285033025,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv
+2026-07-08T04:32:58.684Z,131979,22,939853694105892,4553,22,10,5,50,1036,819,145,failed,1730583611699559,/Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/939853694105892/comments.csv

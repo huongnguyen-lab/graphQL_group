@@ -227,11 +227,21 @@ function auditPostCoverage(posts, comments) {
   };
 }
 
-function pickPostsToCrawl(posts, comments, attemptedPosts = new Set()) {
+function pickPostsToCrawl(posts, comments, attemptedPosts = new Set(), groupId = '') {
   const audit = auditPostCoverage(posts, comments);
-  let candidates = config.FORCE_COMMENT_CRAWL
-    ? audit.missingPosts
-    : audit.missingPosts.filter(post => !attemptedPosts.has(String(post.post_id)));
+  const recrawlPostIds = groupId ? loadRecrawlPostIds(groupId) : null;
+  let candidates;
+
+  if (recrawlPostIds && recrawlPostIds.size > 0) {
+    candidates = audit.postsWithCounter.filter(post => recrawlPostIds.has(String(post.post_id)));
+  } else {
+    const basePosts = process.env.PHASE2_INCLUDE_UNDERFILLED === '1'
+      ? [...audit.missingPosts, ...audit.underfilledPosts]
+      : audit.missingPosts;
+    candidates = config.FORCE_COMMENT_CRAWL
+      ? basePosts
+      : basePosts.filter(post => !attemptedPosts.has(String(post.post_id)));
+  }
 
   if (config.COMMENT_POST_IDS && config.COMMENT_POST_IDS.length > 0) {
     const wanted = new Set(config.COMMENT_POST_IDS.map(String));
@@ -255,7 +265,10 @@ function targetGroupIds() {
 function filterTargetGroupUrls(groupUrls) {
   const targets = targetGroupIds();
   if (targets.size === 0) return groupUrls;
-  return groupUrls.filter(groupUrl => targets.has(groupIdFromUrl(groupUrl)));
+  const byGroupId = new Map(groupUrls.map(groupUrl => [groupIdFromUrl(groupUrl), groupUrl]));
+  return [...targets]
+    .map(groupId => byGroupId.get(groupId))
+    .filter(Boolean);
 }
 
 async function processGroup(browser, groupUrl, results) {
@@ -303,7 +316,7 @@ async function processGroup(browser, groupUrl, results) {
     console.log(`[Phase 2] Loaded ${existingComments.length} existing comments`);
     console.log(`[Phase 2] Loaded ${attemptedPosts.size} attempted posts`);
 
-    const { audit, candidates } = pickPostsToCrawl(posts, existingComments, attemptedPosts);
+    const { audit, candidates } = pickPostsToCrawl(posts, existingComments, attemptedPosts, groupId);
     result.candidates = candidates.length;
     result.missing_posts = audit.missingPosts.length;
     result.underfilled_posts = audit.underfilledPosts.length;
@@ -320,7 +333,8 @@ async function processGroup(browser, groupUrl, results) {
       return;
     }
 
-    console.log(`[Phase 2] Crawl ${candidates.length}/${audit.postsWithCounter.length} missing posts first`);
+    const recrawlMode = process.env.PHASE2_RECRAWL_FILE ? 'recrawl file' : 'missing posts first';
+    console.log(`[Phase 2] Crawl ${candidates.length}/${audit.postsWithCounter.length} (${recrawlMode})`);
 
     const allComments = await crawlComments(browser, candidates, existingComments, {
       onPostAttempt: async (post) => {
@@ -379,6 +393,94 @@ async function processGroup(browser, groupUrl, results) {
 function csvEscape(value) {
   const raw = value == null ? '' : String(value);
   return /[",\r\n]/.test(raw) ? `"${raw.replace(/"/g, '""')}"` : raw;
+}
+
+function parseCsvLine(line) {
+  const values = [];
+  let value = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    const next = line[i + 1];
+    if (ch === '"' && inQuotes && next === '"') {
+      value += '"';
+      i++;
+    } else if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      values.push(value);
+      value = '';
+    } else {
+      value += ch;
+    }
+  }
+
+  values.push(value);
+  return values;
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let line = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (ch === '"' && inQuotes && next === '"') {
+      line += ch + next;
+      i++;
+    } else if (ch === '"') {
+      inQuotes = !inQuotes;
+      line += ch;
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (ch === '\r' && next === '\n') i++;
+      rows.push(parseCsvLine(line));
+      line = '';
+    } else {
+      line += ch;
+    }
+  }
+
+  if (line) rows.push(parseCsvLine(line));
+  return rows;
+}
+
+function csvRowsToObjects(rows) {
+  if (rows.length === 0) return [];
+  const headers = rows[0].map(header => header.replace(/^\uFEFF/, ''));
+  return rows.slice(1)
+    .filter(row => row.some(value => value !== ''))
+    .map(row => {
+      const obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = row[index] || '';
+      });
+      return obj;
+    });
+}
+
+function loadRecrawlPostIds(groupId) {
+  const filePath = process.env.PHASE2_RECRAWL_FILE;
+  if (!filePath) return null;
+
+  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.join(__dirname, filePath);
+  if (!fs.existsSync(resolvedPath)) return null;
+
+  const statuses = new Set((process.env.PHASE2_RECRAWL_STATUSES || '')
+    .split(/[,\s]+/)
+    .map(status => status.trim())
+    .filter(Boolean));
+
+  const rows = csvRowsToObjects(parseCsv(fs.readFileSync(resolvedPath, 'utf8')));
+  const ids = rows
+    .filter(row => String(row.group_id || '') === String(groupId))
+    .filter(row => statuses.size === 0 || statuses.has(String(row.status || '')))
+    .map(row => String(row.post_id || '').trim())
+    .filter(Boolean);
+
+  return new Set(ids);
 }
 
 function writeMissingPostsReport(groupUrls) {

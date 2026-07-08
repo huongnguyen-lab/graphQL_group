@@ -6,7 +6,7 @@ const path = require('path');
 // Lần đầu chạy: chưa có file này, script sẽ mở Chrome và chờ bạn đăng nhập tay
 // rồi tự lưu cookie/login vào đây. Các lần chạy sau dùng lại session này luôn.
 const SESSION_FILE = path.join(__dirname, 'session.json');
-const BROWSER_HEADLESS = false;
+const BROWSER_HEADLESS = process.env.BROWSER_HEADLESS === '1';
 
 // ─── Date Range ────────────────────────────────────────────────────────────────
 // Chỉ lấy bài trong khoảng thời gian này

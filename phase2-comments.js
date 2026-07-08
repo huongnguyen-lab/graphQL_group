@@ -417,6 +417,7 @@ async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getColle
   let stableRounds = 0;
   let stagnantDataRounds = 0;
   let unproductiveClickRounds = 0;
+  let everFoundDialog = false;
   const maxSteps =
     expectedCommentCount > 0 && expectedCommentCount <= 20
       ? Math.max(24, config.MAX_COMMENT_PAGES)
@@ -427,9 +428,16 @@ async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getColle
     const gqlBefore = getCollectedCount();
 
     if (!before.found) {
+      if (everFoundDialog) {
+        // Dialog từng load được rồi (đã có comment qua GraphQL), giờ Facebook re-render
+        // mất dialog giữa chừng -> dừng lại nhưng GIỮ comment đã thu thập, không huỷ.
+        console.log(`    ⚠️ Mất vùng comment dialog giữa chừng (đã có ${gqlBefore} comment qua GraphQL), dừng vòng lặp nhưng giữ lại dữ liệu`);
+        return true;
+      }
       console.log('    ⚠️ Không tìm thấy vùng comment dialog');
       return false;
     }
+    everFoundDialog = true;
 
     await scrollCommentAreaToBottom(page);
     await page.waitForTimeout(Math.max(1400, config.COMMENT_CLICK_WAIT_MS));
@@ -682,7 +690,7 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
     return existingComments;
   }
 
-  const concurrency = Math.max(1, Number(config.COMMENT_CONCURRENCY || 1));
+  const concurrency = Math.max(1, Number(options.concurrency || config.COMMENT_CONCURRENCY || 1));
   console.log(`\n[Phase 2] Crawl comment cho ${postsToUpdate.length} posts...`);
   console.log(`[Phase 2] Comment concurrency: ${concurrency}`);
 
@@ -719,6 +727,11 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
     while (nextIndex < postsToUpdate.length) {
       const i = nextIndex++;
       const post = postsToUpdate[i];
+
+      if (typeof options.beforePost === 'function') {
+        await options.beforePost(post);
+      }
+
       console.log(`  [${i + 1}/${postsToUpdate.length}] [W${workerId}] Post ${post.post_id} (${post.comment} comments expected)`);
 
       const newComments = await crawlPostComments(browser, post);
