@@ -29,6 +29,7 @@ const LIMIT = Number(process.env.PRIORITY_LIMIT || 0); // 0 = không giới hạ
 const BIG_POST_THRESHOLD = Number(process.env.PRIORITY_BIG_POST_THRESHOLD || 500); // >500 comment kỳ vọng = post "khủng"
 const BIG_POST_CONCURRENCY = Number(process.env.PRIORITY_BIG_POST_CONCURRENCY || 2);
 const SMALL_POST_CONCURRENCY = Number(process.env.PRIORITY_SMALL_POST_CONCURRENCY || 6);
+const SMALL_FIRST = process.env.PRIORITY_SMALL_FIRST === '1'; // 1 = crawl post ít comment trước, nhiều comment sau
 
 process.stdout.on('error', err => { if (err.code !== 'EPIPE') throw err; });
 process.stderr.on('error', err => { if (err.code !== 'EPIPE') throw err; });
@@ -167,7 +168,14 @@ async function main() {
   // để đỡ lag máy, post nhỏ thì crawl song song nhiều như bình thường.
   const bigPosts = posts.filter(p => p.comment > BIG_POST_THRESHOLD);
   const smallPosts = posts.filter(p => p.comment <= BIG_POST_THRESHOLD);
+  if (SMALL_FIRST) {
+    bigPosts.sort((a, b) => a.comment - b.comment);
+    smallPosts.sort((a, b) => a.comment - b.comment);
+  }
   console.log(`[Priority recrawl] Chia lane: ${bigPosts.length} post >${BIG_POST_THRESHOLD} comment (concurrency ${BIG_POST_CONCURRENCY}), ${smallPosts.length} post <=${BIG_POST_THRESHOLD} comment (concurrency ${SMALL_POST_CONCURRENCY})`);
+  if (SMALL_FIRST) {
+    console.log('[Priority recrawl] SMALL_FIRST bật: crawl post ít comment trước, nhiều comment sau');
+  }
 
   const browser = await launchBrowser();
 
@@ -224,16 +232,26 @@ async function main() {
     };
   }
 
-  try {
-    if (bigPosts.length > 0) {
-      console.log(`\n[Priority recrawl] === Lane POST LỚN (concurrency ${BIG_POST_CONCURRENCY}) ===`);
-      await crawlComments(browser, bigPosts, preloadExisting(), makeOptions(BIG_POST_CONCURRENCY));
-    }
+  async function runBigLane() {
+    if (bigPosts.length === 0) return;
+    console.log(`\n[Priority recrawl] === Lane POST LỚN (concurrency ${BIG_POST_CONCURRENCY}) ===`);
+    await crawlComments(browser, bigPosts, preloadExisting(), makeOptions(BIG_POST_CONCURRENCY));
+  }
 
-    if (smallPosts.length > 0) {
-      console.log(`\n[Priority recrawl] === Lane POST NHỎ (concurrency ${SMALL_POST_CONCURRENCY}) ===`);
-      // reload từ disk để lấy luôn comment vừa ghi ở lane post lớn, tránh writeComments ghi đè mất dữ liệu
-      await crawlComments(browser, smallPosts, preloadExisting(), makeOptions(SMALL_POST_CONCURRENCY));
+  async function runSmallLane() {
+    if (smallPosts.length === 0) return;
+    console.log(`\n[Priority recrawl] === Lane POST NHỎ (concurrency ${SMALL_POST_CONCURRENCY}) ===`);
+    // reload từ disk để lấy luôn comment vừa ghi ở lane kia, tránh writeComments ghi đè mất dữ liệu
+    await crawlComments(browser, smallPosts, preloadExisting(), makeOptions(SMALL_POST_CONCURRENCY));
+  }
+
+  try {
+    if (SMALL_FIRST) {
+      await runSmallLane();
+      await runBigLane();
+    } else {
+      await runBigLane();
+      await runSmallLane();
     }
   } finally {
     await browser.close().catch(() => {});
