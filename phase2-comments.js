@@ -256,7 +256,7 @@ async function clickAll(page, selectors, waitTime = 700) {
         const visible = await button.isVisible().catch(() => false);
         if (!visible) continue;
 
-        await button.click({ force: true, timeout: 3000 });
+        await button.click({ timeout: 3000 });
         totalClicked += 1;
         await page.waitForTimeout(waitTime);
       } catch (_) {}
