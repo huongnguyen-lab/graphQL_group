@@ -1,24 +1,14 @@
 [Priority recrawl] File nguồn: /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/phase2-recrawl-posts-batch2.csv
 [Priority recrawl] Tổng 266 post trong file, còn 266 post cần crawl (giữ nguyên thứ tự ưu tiên đã sort theo shortage_comments)
 [Priority recrawl] Nhịp làm việc: 30 phút chạy / 5 phút nghỉ
-[Priority recrawl] Chia lane: 239 post >500 comment (concurrency 2), 27 post <=500 comment (concurrency 2)
+[Priority recrawl] Chia lane: 239 post >500 comment (concurrency 1), 27 post <=500 comment (concurrency 2)
 [Browser] Khởi động Chrome...
 [Browser] Đã đăng nhập sẵn (dùng /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/session.batch2.json)
 
-[Priority recrawl] === Lane POST LỚN (concurrency 2) ===
+[Priority recrawl] === Lane POST LỚN (concurrency 1) ===
+[Priority recrawl] Chunk post lớn 1-10/239
+[Priority recrawl] Preload 61438 existing comments từ 5 group
 
-[Phase 2] Crawl comment cho 239 posts...
-[Phase 2] Comment concurrency: 2
-  [1/239] [W1] Post 4404399003150330 (4136 comments expected)
-  [2/239] [W2] Post 713335034979626 (4036 comments expected)
-    → Đã chọn All comments (Tất cả bình luận)
-    → Đã chọn All comments (Tất cả bình luận)
-    ↳ load step 1: articles 10->47, gql 11->48, buttons 0->0, height 1834->4814, clicked 1
-    ↳ load step 2: articles 47->57, gql 48->58, buttons 0->0, height 4814->5555, clicked 0
-    ↳ load step 1: articles 10->73, gql 12->75, buttons 86->0, height 2115->8419, clicked 8
-    ↳ load step 3: articles 57->113, gql 58->114, buttons 0->0, height 5555->10135, clicked 5
-    ↳ load step 4: articles 113->123, gql 114->124, buttons 0->0, height 10135->10896, clicked 0
-    ↳ load step 5: articles 123->174, gql 124->175, buttons 0->0, height 10896->15118, clicked 4
-    ↳ load step 6: articles 174->213, gql 175->214, buttons 0->0, height 15118->18315, clicked 3
-    ↳ load step 7: articles 213->223, gql 214->224, buttons 0->0, height 18315->19055, clicked 0
-    ↳ load step 8: articles 223->238, gql 224->239, buttons 0->0, height 19055->20263, clicked 1
+[Phase 2] Crawl comment cho 10 posts...
+[Phase 2] Comment concurrency: 1
+  [1/10] [W1] Post 4404399003150330 (4136 comments expected)
