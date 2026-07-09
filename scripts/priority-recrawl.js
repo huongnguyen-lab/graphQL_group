@@ -34,6 +34,35 @@ const SMALL_FIRST = process.env.PRIORITY_SMALL_FIRST === '1'; // 1 = crawl post 
 process.stdout.on('error', err => { if (err.code !== 'EPIPE') throw err; });
 process.stderr.on('error', err => { if (err.code !== 'EPIPE') throw err; });
 
+// ─── Dừng êm (graceful stop) ────────────────────────────────────────────────
+// Nhận SIGINT/SIGTERM lần đầu: không nhận post mới, các post đang crawl dở sẽ
+// cắt sớm vòng lặp scroll và ghi lại đúng số comment đã thu thập (không mất dữ
+// liệu, dù mới lấy được 30-40%). Nhận tín hiệu lần 2: thoát ngay, phòng khi
+// một page bị treo không thoát nổi.
+let stopRequested = false;
+function requestStop(signal) {
+  if (stopRequested) {
+    console.log(`\n[Priority recrawl] Nhận thêm tín hiệu ${signal}, thoát ngay.`);
+    process.exit(1);
+  }
+  stopRequested = true;
+  console.log(`\n[Priority recrawl] Nhận tín hiệu ${signal}, đang dừng êm (ghi lại dữ liệu dở dang, có thể mất vài giây)...\n`);
+}
+process.on('SIGINT', () => requestStop('SIGINT'));
+process.on('SIGTERM', () => requestStop('SIGTERM'));
+
+function interruptibleSleep(ms) {
+  return new Promise(resolve => {
+    const start = Date.now();
+    const timer = setInterval(() => {
+      if (stopRequested || Date.now() - start >= ms) {
+        clearInterval(timer);
+        resolve();
+      }
+    }, 500);
+  });
+}
+
 // ─── CSV helpers (giống các script khác trong repo) ────────────────────────
 function parseCsvLine(line) {
   const values = [];
@@ -182,15 +211,16 @@ async function main() {
   let workEndsAt = Date.now() + WORK_MS;
   let restPromise = null;
   async function maybeRest() {
+    if (stopRequested) return;
     if (restPromise) { await restPromise; return; }
     if (Date.now() >= workEndsAt) {
       const untilStr = new Date(Date.now() + REST_MS).toLocaleTimeString('vi-VN');
       console.log(`\n[Nhịp nghỉ] Đã crawl liên tục ${WORK_MINUTES} phút, nghỉ ${REST_MINUTES} phút (tới ${untilStr})...\n`);
-      restPromise = new Promise(resolve => setTimeout(resolve, REST_MS));
+      restPromise = interruptibleSleep(REST_MS);
       await restPromise;
       restPromise = null;
       workEndsAt = Date.now() + WORK_MS;
-      console.log('\n[Nhịp nghỉ] Nghỉ xong, crawl tiếp.\n');
+      if (!stopRequested) console.log('\n[Nhịp nghỉ] Nghỉ xong, crawl tiếp.\n');
     }
   }
 
@@ -201,6 +231,7 @@ async function main() {
     return {
       concurrency,
       beforePost: maybeRest,
+      shouldStop: () => stopRequested,
       onPostAttempt: async (post, status) => {
         processed += 1;
         if (status === 'failed') {
@@ -233,13 +264,13 @@ async function main() {
   }
 
   async function runBigLane() {
-    if (bigPosts.length === 0) return;
+    if (bigPosts.length === 0 || stopRequested) return;
     console.log(`\n[Priority recrawl] === Lane POST LỚN (concurrency ${BIG_POST_CONCURRENCY}) ===`);
     await crawlComments(browser, bigPosts, preloadExisting(), makeOptions(BIG_POST_CONCURRENCY));
   }
 
   async function runSmallLane() {
-    if (smallPosts.length === 0) return;
+    if (smallPosts.length === 0 || stopRequested) return;
     console.log(`\n[Priority recrawl] === Lane POST NHỎ (concurrency ${SMALL_POST_CONCURRENCY}) ===`);
     // reload từ disk để lấy luôn comment vừa ghi ở lane kia, tránh writeComments ghi đè mất dữ liệu
     await crawlComments(browser, smallPosts, preloadExisting(), makeOptions(SMALL_POST_CONCURRENCY));
@@ -257,7 +288,7 @@ async function main() {
     await browser.close().catch(() => {});
   }
 
-  console.log('[Priority recrawl] HOÀN THÀNH batch này.');
+  console.log(stopRequested ? '[Priority recrawl] Đã dừng êm theo yêu cầu, dữ liệu dở dang đã được ghi lại.' : '[Priority recrawl] HOÀN THÀNH batch này.');
 }
 
 main().catch(err => {

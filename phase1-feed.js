@@ -299,6 +299,12 @@ async function launchBrowser() {
 
   const browser = await chromium.launch({
     headless: config.BROWSER_HEADLESS,
+    // Tắt auto-close của Playwright khi nhận SIGINT/SIGTERM: mặc định Playwright
+    // tự đóng browser ngay khi có tín hiệu, đè lên (và thắng race) cơ chế dừng êm
+    // của priority-recrawl.js khiến dữ liệu đang crawl dở bị mất thay vì ghi lại.
+    handleSIGINT: false,
+    handleSIGTERM: false,
+    handleSIGHUP: false,
     args: [
       '--disable-blink-features=AutomationControlled',
       '--no-sandbox',
@@ -348,7 +354,7 @@ async function launchBrowser() {
       console.log('[Browser] Hết thời gian chờ, vẫn chưa phát hiện đăng nhập thành công.');
     }
   } else {
-    console.log('[Browser] Đã đăng nhập sẵn (dùng session.json)');
+    console.log('[Browser] Đã đăng nhập sẵn (dùng ' + config.SESSION_FILE + ')');
   }
 
   await page.close().catch(() => {});

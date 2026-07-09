@@ -413,7 +413,7 @@ async function expandAllReplies(page, maxRounds = 8) {
   }
 }
 
-async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getCollectedCount = () => 0) {
+async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getCollectedCount = () => 0, shouldStop = () => false) {
   let stableRounds = 0;
   let stagnantDataRounds = 0;
   let unproductiveClickRounds = 0;
@@ -424,6 +424,10 @@ async function scrollAndLoadAllComments(page, expectedCommentCount = 0, getColle
       : Math.max(48, config.MAX_COMMENT_PAGES);
 
   for (let step = 0; step < maxSteps; step++) {
+    if (shouldStop()) {
+      console.log(`    ↳ dừng sớm: nhận tín hiệu dừng, giữ lại ${getCollectedCount()} comment đã thu thập`);
+      break;
+    }
     const before = await getCommentAreaStats(page);
     const gqlBefore = getCollectedCount();
 
@@ -578,7 +582,7 @@ async function scrollComments(page) {
  * @param {object} post - post object từ Phase 1
  * @returns {object[]} array of comment objects
  */
-async function crawlPostComments(browser, post) {
+async function crawlPostComments(browser, post, shouldStop = () => false) {
   if (Number(post.comment || 0) <= 0) {
     return [];
   }
@@ -658,7 +662,7 @@ async function crawlPostComments(browser, post) {
       console.log('    → Bỏ qua đổi filter All comments để tránh lỗi unavailable');
     }
 
-    const foundCommentArea = await scrollAndLoadAllComments(page, Number(post.comment || 0), () => allComments.length);
+    const foundCommentArea = await scrollAndLoadAllComments(page, Number(post.comment || 0), () => allComments.length, shouldStop);
     if (!foundCommentArea && Number(post.comment || 0) > 0) {
       failed = true;
     }
@@ -708,6 +712,7 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
   let writeQueue = Promise.resolve();
   const crawledPostIds = new Set();
   const failedPostIds = new Set();
+  const shouldStop = typeof options.shouldStop === 'function' ? options.shouldStop : () => false;
 
   async function maybeReportBatch(post, status) {
     completedAttempts += 1;
@@ -725,6 +730,10 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
 
   async function worker(workerId) {
     while (nextIndex < postsToUpdate.length) {
+      if (shouldStop()) {
+        console.log(`  [W${workerId}] Nhận tín hiệu dừng, không nhận post mới`);
+        break;
+      }
       const i = nextIndex++;
       const post = postsToUpdate[i];
 
@@ -734,7 +743,7 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
 
       console.log(`  [${i + 1}/${postsToUpdate.length}] [W${workerId}] Post ${post.post_id} (${post.comment} comments expected)`);
 
-      const newComments = await crawlPostComments(browser, post);
+      const newComments = await crawlPostComments(browser, post, shouldStop);
       if (newComments === null) {
         console.log(`    [W${workerId}] Bỏ qua post ${post.post_id} vì lỗi load, chưa đánh dấu crawl xong`);
         failedPostIds.add(String(post.post_id));
