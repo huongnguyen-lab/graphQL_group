@@ -336,8 +336,22 @@ async function launchBrowser() {
   const loggedIn = await hasLoginCookie();
 
   if (!loggedIn) {
+    // Lưu lại c_user cũ (nếu session file trước đó có) để đối chiếu sau khi
+    // đăng nhập lại — tránh lặp lại sự cố session hết hạn giữa chừng rồi bị
+    // đăng nhập nhầm sang tài khoản khác mà không ai biết.
+    let expectedCUser = null;
+    try {
+      if (fs.existsSync(config.SESSION_FILE)) {
+        const old = JSON.parse(fs.readFileSync(config.SESSION_FILE, 'utf8'));
+        expectedCUser = (old.cookies || []).find(c => c.name === 'c_user')?.value || null;
+      }
+    } catch (_) {}
+
     console.log('[Browser] Chưa đăng nhập. Hãy đăng nhập vào Chrome vừa mở.');
     console.log('           Script sẽ tự phát hiện khi đăng nhập xong (chờ tối đa 5 phút)...');
+    if (expectedCUser) {
+      console.log(`           ⚠️ Session cũ (tài khoản c_user=${expectedCUser}) không còn hợp lệ. Đăng nhập ĐÚNG tài khoản này, đừng đăng nhập nhầm tài khoản khác!`);
+    }
 
     const deadline = Date.now() + 5 * 60 * 1000;
     let confirmed = false;
@@ -348,8 +362,13 @@ async function launchBrowser() {
     }
 
     if (confirmed) {
+      const cookies = await context.cookies('https://www.facebook.com');
+      const newCUser = cookies.find(c => c.name === 'c_user')?.value || null;
       await context.storageState({ path: config.SESSION_FILE });
       console.log('[Browser] Đăng nhập thành công, đã lưu session vào ' + config.SESSION_FILE);
+      if (expectedCUser && newCUser && newCUser !== expectedCUser) {
+        console.log(`[Browser] ⚠️⚠️⚠️ CẢNH BÁO: tài khoản vừa đăng nhập (c_user=${newCUser}) KHÁC với tài khoản cũ trong session (c_user=${expectedCUser}). Kiểm tra lại ngay, có thể đang crawl nhầm tài khoản!`);
+      }
     } else {
       console.log('[Browser] Hết thời gian chờ, vẫn chưa phát hiện đăng nhập thành công.');
     }

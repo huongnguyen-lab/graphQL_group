@@ -227,10 +227,46 @@ async function main() {
   let processed = 0;
   const total = posts.length;
 
-  function makeOptions(concurrency) {
+  // Nghỉ theo SỐ POST đã crawl (riêng với nhịp nghỉ theo thời gian ở trên):
+  // cứ crawl xong N post thì nghỉ M phút rồi crawl tiếp, để tài khoản đỡ bị
+  // hoạt động liên tục quá lâu.
+  function makeCountRest(everyN, minutes, label) {
+    let count = 0;
+    let restPromise = null;
+    return {
+      async beforePost() {
+        if (restPromise) await restPromise;
+      },
+      async afterPost() {
+        if (stopRequested) return;
+        count += 1;
+        if (count < everyN) return;
+        count = 0;
+        const ms = minutes * 60 * 1000;
+        const untilStr = new Date(Date.now() + ms).toLocaleTimeString('vi-VN');
+        console.log(`\n[Nhịp nghỉ theo post] Đã crawl xong ${everyN} post ${label}, nghỉ ${minutes} phút (tới ${untilStr})...\n`);
+        restPromise = interruptibleSleep(ms);
+        await restPromise;
+        restPromise = null;
+        if (!stopRequested) console.log(`\n[Nhịp nghỉ theo post] Nghỉ xong, crawl tiếp post ${label}.\n`);
+      },
+    };
+  }
+
+  const BIG_REST_EVERY = Number(process.env.PRIORITY_BIG_REST_EVERY || 2);
+  const BIG_REST_MINUTES = Number(process.env.PRIORITY_BIG_REST_MINUTES || 15);
+  const SMALL_REST_EVERY = Number(process.env.PRIORITY_SMALL_REST_EVERY || 6);
+  const SMALL_REST_MINUTES = Number(process.env.PRIORITY_SMALL_REST_MINUTES || 15);
+  const bigCountRest = makeCountRest(BIG_REST_EVERY, BIG_REST_MINUTES, 'lớn');
+  const smallCountRest = makeCountRest(SMALL_REST_EVERY, SMALL_REST_MINUTES, 'nhỏ');
+
+  function makeOptions(concurrency, countRest) {
     return {
       concurrency,
-      beforePost: maybeRest,
+      beforePost: async post => {
+        await maybeRest();
+        await countRest.beforePost();
+      },
       shouldStop: () => stopRequested,
       onPostAttempt: async (post, status) => {
         processed += 1;
@@ -239,6 +275,7 @@ async function main() {
           saveState({ done_post_ids: [...done], fail_counts: failCounts });
         }
         console.log(`[Priority recrawl] Tiến độ: ${processed}/${total} (post ${post.post_id}: ${status})`);
+        await countRest.afterPost();
       },
       onProgressWrite: async (allSnapshotComments, post, newComments) => {
         const groupId = groupIdFromUrl(post.post_url);
@@ -266,14 +303,14 @@ async function main() {
   async function runBigLane() {
     if (bigPosts.length === 0 || stopRequested) return;
     console.log(`\n[Priority recrawl] === Lane POST LỚN (concurrency ${BIG_POST_CONCURRENCY}) ===`);
-    await crawlComments(browser, bigPosts, preloadExisting(), makeOptions(BIG_POST_CONCURRENCY));
+    await crawlComments(browser, bigPosts, preloadExisting(), makeOptions(BIG_POST_CONCURRENCY, bigCountRest));
   }
 
   async function runSmallLane() {
     if (smallPosts.length === 0 || stopRequested) return;
     console.log(`\n[Priority recrawl] === Lane POST NHỎ (concurrency ${SMALL_POST_CONCURRENCY}) ===`);
     // reload từ disk để lấy luôn comment vừa ghi ở lane kia, tránh writeComments ghi đè mất dữ liệu
-    await crawlComments(browser, smallPosts, preloadExisting(), makeOptions(SMALL_POST_CONCURRENCY));
+    await crawlComments(browser, smallPosts, preloadExisting(), makeOptions(SMALL_POST_CONCURRENCY, smallCountRest));
   }
 
   try {

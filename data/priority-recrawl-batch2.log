@@ -1,32 +1,563 @@
-[Priority recrawl] File nguồn: /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/phase2-recrawl-posts-batch2.csv
-[Priority recrawl] Tổng 266 post trong file, còn 266 post cần crawl (giữ nguyên thứ tự ưu tiên đã sort theo shortage_comments)
-[Priority recrawl] Nhịp làm việc: 30 phút chạy / 5 phút nghỉ
-[Priority recrawl] Chia lane: 239 post >500 comment (concurrency 2), 27 post <=500 comment (concurrency 2)
+[Priority recrawl] File nguồn: /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/phase2-recrawl-posts-buzz2.csv
+[Priority recrawl] Tổng 106 post trong file, còn 106 post cần crawl (giữ nguyên thứ tự ưu tiên đã sort theo shortage_comments)
+[Priority recrawl] Nhịp làm việc: 999999 phút chạy / 5 phút nghỉ
+[Priority recrawl] Chia lane: 106 post >500 comment (concurrency 3), 0 post <=500 comment (concurrency 3)
 [Browser] Khởi động Chrome...
 [Browser] Đã đăng nhập sẵn (dùng /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/session.batch2.json)
 
-[Priority recrawl] === Lane POST LỚN (concurrency 2) ===
+[Priority recrawl] === Lane POST LỚN (concurrency 3) ===
 
-[Phase 2] Crawl comment cho 239 posts...
-[Phase 2] Comment concurrency: 2
-  [1/239] [W1] Post 4404399003150330 (4136 comments expected)
-  [2/239] [W2] Post 713335034979626 (4036 comments expected)
-    → Đã chọn All comments (Tất cả bình luận)
-    → Đã chọn All comments (Tất cả bình luận)
-    ↳ load step 1: articles 10->47, gql 11->48, buttons 0->0, height 1840->4826, clicked 3
-    ↳ load step 2: articles 47->57, gql 48->58, buttons 0->0, height 4826->5573, clicked 0
-    ↳ load step 1: articles 10->73, gql 12->75, buttons 86->0, height 2171->8481, clicked 9
-    ↳ load step 3: articles 57->113, gql 58->114, buttons 0->0, height 5573->10159, clicked 5
-    ↳ load step 4: articles 113->123, gql 114->124, buttons 0->0, height 10159->10926, clicked 0
-    ↳ load step 5: articles 123->174, gql 124->175, buttons 0->0, height 10926->15154, clicked 4
-    ↳ load step 6: articles 174->213, gql 175->214, buttons 0->0, height 15154->18357, clicked 1
-    ↳ load step 7: articles 213->223, gql 214->224, buttons 0->0, height 18357->19103, clicked 0
-    ↳ load step 8: articles 223->238, gql 224->239, buttons 0->0, height 19103->20317, clicked 1
-    ↳ load step 9: articles 238->266, gql 239->267, buttons 0->0, height 20317->22541, clicked 2
-    ↳ load step 2: articles 73->378, gql 75->380, buttons 0->0, height 8481->37984, clicked 23
-    ↳ load step 10: articles 266->386, gql 267->387, buttons 0->0, height 22541->32588, clicked 4
-    ↳ load step 3: articles 378->503, gql 380->505, buttons 0->0, height 37984->49225, clicked 4
-    ↳ load step 11: articles 386->568, gql 387->569, buttons 0->0, height 32588->51074, clicked 14
-    ↳ load step 12: articles 568->603, gql 569->604, buttons 0->0, height 51074->54347, clicked 2
-    ↳ load step 13: articles 603->616, gql 604->617, buttons 0->0, height 54347->55446, clicked 1
-    ↳ load step 4: articles 503->826, gql 505->828, buttons 0->0, height 49225->80274, clicked 15
+[Phase 2] Crawl comment cho 106 posts...
+[Phase 2] Comment concurrency: 3
+  [1/106] [W1] Post 2052738928793144 (768 comments expected)
+  [2/106] [W2] Post 24718257371194242 (769 comments expected)
+  [3/106] [W3] Post 24705374855815827 (776 comments expected)
+    → Đã chọn All comments (All comments)
+    → Đã chọn All comments (All comments)
+    → Đã chọn All comments (All comments)
+    ↳ load step 1: articles 10->20, gql 10->20, buttons 0->0, height 1760->2680, clicked 0
+    ↳ load step 1: articles 10->20, gql 10->20, buttons 0->0, height 1932->2853, clicked 0
+    ↳ load step 2: articles 20->40, gql 20->40, buttons 0->0, height 2680->4441, clicked 0
+    ↳ load step 2: articles 20->30, gql 20->30, buttons 0->0, height 2853->3733, clicked 0
+    ↳ load step 1: articles 10->49, gql 10->49, buttons 42->0, height 2092->5189, clicked 2
+    ↳ load step 3: articles 40->50, gql 40->50, buttons 0->0, height 4441->5302, clicked 0
+    ↳ load step 3: articles 30->40, gql 30->40, buttons 0->0, height 3733->4674, clicked 0
+    ↳ load step 2: articles 49->61, gql 49->61, buttons 0->0, height 5189->6126, clicked 1
+    ↳ load step 4: articles 40->50, gql 40->50, buttons 0->0, height 4674->5574, clicked 0
+    ↳ load step 4: articles 50->60, gql 50->60, buttons 0->0, height 5302->6123, clicked 0
+    ↳ load step 5: articles 50->60, gql 50->60, buttons 0->0, height 5574->6495, clicked 0
+    ↳ load step 5: articles 60->70, gql 60->70, buttons 0->0, height 6123->7023, clicked 0
+    ↳ load step 6: articles 60->70, gql 60->70, buttons 0->0, height 6495->7435, clicked 0
+    ↳ load step 6: articles 70->80, gql 70->80, buttons 0->0, height 7023->7904, clicked 0
+    ↳ load step 3: articles 61->86, gql 61->86, buttons 0->0, height 6126->8142, clicked 1
+    ↳ load step 7: articles 80->90, gql 80->90, buttons 0->0, height 7904->8852, clicked 0
+    ↳ load step 7: articles 70->80, gql 70->80, buttons 0->0, height 7435->8432, clicked 0
+    ↳ load step 4: articles 86->96, gql 86->96, buttons 0->0, height 8142->8883, clicked 0
+    ↳ load step 8: articles 80->90, gql 80->90, buttons 0->0, height 8432->9292, clicked 0
+    ↳ load step 8: articles 90->100, gql 90->100, buttons 0->0, height 8852->9813, clicked 0
+    ↳ load step 9: articles 90->100, gql 90->100, buttons 0->0, height 9292->10233, clicked 0
+    ↳ load step 9: articles 100->110, gql 100->110, buttons 0->0, height 9813->10733, clicked 0
+    ↳ load step 10: articles 100->110, gql 100->110, buttons 0->0, height 10233->11250, clicked 0
+    ↳ load step 10: articles 110->120, gql 110->120, buttons 0->0, height 10733->11654, clicked 0
+    ↳ load step 5: articles 96->147, gql 96->147, buttons 0->0, height 8883->12948, clicked 2
+    ↳ load step 11: articles 110->120, gql 110->120, buttons 0->0, height 11250->12170, clicked 0
+    ↳ load step 11: articles 120->130, gql 120->130, buttons 0->0, height 11654->12602, clicked 0
+    ↳ load step 6: articles 147->157, gql 147->157, buttons 0->0, height 12948->13689, clicked 0
+    ↳ load step 12: articles 120->130, gql 120->130, buttons 0->0, height 12170->13031, clicked 0
+    ↳ load step 12: articles 130->140, gql 130->140, buttons 0->0, height 12602->13491, clicked 0
+    ↳ load step 13: articles 130->140, gql 130->140, buttons 0->0, height 13031->13911, clicked 0
+    ↳ load step 13: articles 140->150, gql 140->150, buttons 0->0, height 13491->14419, clicked 0
+    ↳ load step 7: articles 157->170, gql 157->170, buttons 0->0, height 13689->14748, clicked 1
+    ↳ load step 14: articles 140->150, gql 140->150, buttons 0->0, height 13911->14868, clicked 0
+    ↳ load step 14: articles 150->160, gql 150->160, buttons 0->0, height 14419->15340, clicked 0
+    ↳ load step 8: articles 170->191, gql 170->191, buttons 0->0, height 14748->16351, clicked 1
+    ↳ load step 15: articles 150->160, gql 150->160, buttons 0->0, height 14868->15728, clicked 0
+    ↳ load step 15: articles 160->170, gql 160->170, buttons 0->0, height 15340->16269, clicked 0
+    ↳ load step 16: articles 160->170, gql 160->170, buttons 0->0, height 15728->16549, clicked 0
+    ↳ load step 16: articles 170->180, gql 170->180, buttons 0->0, height 16269->17109, clicked 0
+    ↳ load step 17: articles 170->180, gql 170->180, buttons 0->0, height 16549->17469, clicked 0
+    ↳ load step 17: articles 180->190, gql 180->190, buttons 0->0, height 17109->18030, clicked 0
+    ↳ load step 18: articles 180->190, gql 180->190, buttons 0->0, height 17469->18350, clicked 0
+    ↳ load step 18: articles 190->200, gql 190->200, buttons 0->0, height 18030->18910, clicked 0
+    ↳ load step 9: articles 191->246, gql 191->246, buttons 0->0, height 16351->20762, clicked 2
+    ↳ load step 19: articles 190->200, gql 190->200, buttons 0->0, height 18350->19270, clicked 0
+    ↳ load step 19: articles 200->210, gql 200->210, buttons 0->0, height 18910->19831, clicked 0
+    ↳ load step 10: articles 246->260, gql 246->260, buttons 0->0, height 20762->21895, clicked 1
+    ↳ load step 20: articles 200->210, gql 200->210, buttons 0->0, height 19270->20219, clicked 0
+    ↳ load step 20: articles 210->220, gql 210->220, buttons 0->0, height 19831->20711, clicked 0
+    ↳ load step 21: articles 210->220, gql 210->220, buttons 0->0, height 20219->21120, clicked 0
+    ↳ load step 21: articles 220->230, gql 220->230, buttons 0->0, height 20711->21720, clicked 0
+    ↳ load step 11: articles 260->284, gql 260->284, buttons 0->0, height 21895->23788, clicked 1
+    ↳ load step 22: articles 220->230, gql 220->230, buttons 0->0, height 21120->22028, clicked 0
+    ↳ load step 22: articles 230->240, gql 230->240, buttons 0->0, height 21720->22620, clicked 0
+    ↳ load step 23: articles 230->240, gql 230->240, buttons 0->0, height 22028->22929, clicked 0
+    ↳ load step 23: articles 240->250, gql 240->250, buttons 0->0, height 22620->23521, clicked 0
+    ↳ load step 24: articles 240->250, gql 240->250, buttons 0->0, height 22929->23829, clicked 0
+    ↳ load step 24: articles 250->260, gql 250->260, buttons 0->0, height 23521->24449, clicked 0
+    ↳ load step 12: articles 284->309, gql 284->309, buttons 0->0, height 23788->25784, clicked 1
+    ↳ load step 25: articles 260->270, gql 260->270, buttons 0->0, height 24449->25358, clicked 0
+    ↳ load step 25: articles 250->260, gql 250->260, buttons 0->0, height 23829->24730, clicked 0
+    ↳ load step 13: articles 309->319, gql 309->319, buttons 0->0, height 25784->26525, clicked 0
+    ↳ load step 26: articles 270->280, gql 270->280, buttons 0->0, height 25358->26238, clicked 0
+    ↳ load step 26: articles 260->270, gql 260->270, buttons 0->0, height 24730->25630, clicked 0
+    ↳ load step 14: articles 319->343, gql 319->343, buttons 0->0, height 26525->28806, clicked 2
+    ↳ load step 27: articles 280->290, gql 280->290, buttons 0->0, height 26238->27139, clicked 0
+    ↳ load step 27: articles 270->280, gql 270->280, buttons 0->0, height 25630->26531, clicked 0
+    ↳ load step 28: articles 290->300, gql 290->300, buttons 0->0, height 27139->28019, clicked 0
+    ↳ load step 28: articles 280->290, gql 280->290, buttons 0->0, height 26531->27431, clicked 0
+    ↳ load step 15: articles 343->366, gql 343->366, buttons 0->0, height 28806->30906, clicked 1
+    ↳ load step 29: articles 300->310, gql 300->310, buttons 0->0, height 28019->28880, clicked 0
+    ↳ load step 29: articles 290->300, gql 290->300, buttons 0->0, height 27431->28372, clicked 0
+    ↳ load step 16: articles 366->387, gql 366->387, buttons 0->0, height 30906->32809, clicked 1
+    ↳ load step 30: articles 310->320, gql 310->320, buttons 0->0, height 28880->29721, clicked 0
+    ↳ load step 30: articles 300->310, gql 300->310, buttons 0->0, height 28372->29272, clicked 0
+    ↳ load step 31: articles 320->330, gql 320->330, buttons 0->0, height 29721->30641, clicked 0
+    ↳ load step 31: articles 310->320, gql 310->320, buttons 0->0, height 29272->30173, clicked 0
+    ↳ load step 17: articles 387->398, gql 387->398, buttons 0->0, height 32809->33844, clicked 1
+    ↳ load step 32: articles 330->340, gql 330->340, buttons 0->0, height 30641->31562, clicked 0
+    ↳ load step 32: articles 320->330, gql 320->330, buttons 0->0, height 30173->31053, clicked 0
+    ↳ load step 18: articles 398->409, gql 398->409, buttons 0->0, height 33844->34882, clicked 1
+    ↳ load step 33: articles 340->350, gql 340->350, buttons 0->0, height 31562->32422, clicked 0
+    ↳ load step 33: articles 330->340, gql 330->340, buttons 0->0, height 31053->31954, clicked 0
+    ↳ load step 19: articles 409->412, gql 409->412, buttons 0->0, height 34882->34846, clicked 0
+    ↳ load step 34: articles 350->360, gql 350->360, buttons 0->0, height 32422->33323, clicked 0
+    ↳ load step 34: articles 340->350, gql 340->350, buttons 0->0, height 31954->32794, clicked 0
+    ↳ load step 20: articles 412->412, gql 412->412, buttons 0->0, height 34846->34846, clicked 0
+    ↳ load step 35: articles 360->370, gql 360->370, buttons 0->0, height 33323->34203, clicked 0
+    ↳ load step 35: articles 350->360, gql 350->360, buttons 0->0, height 32794->33675, clicked 0
+    ↳ load step 21: articles 412->412, gql 412->412, buttons 0->0, height 34846->34846, clicked 0
+    ↳ load step 36: articles 370->380, gql 370->380, buttons 0->0, height 34203->35104, clicked 0
+    ↳ load step 36: articles 360->370, gql 360->370, buttons 0->0, height 33675->34555, clicked 0
+    ↳ load step 22: articles 412->412, gql 412->412, buttons 0->0, height 34846->34846, clicked 0
+    ↳ load step 37: articles 380->390, gql 380->390, buttons 0->0, height 35104->36004, clicked 0
+    ↳ load step 37: articles 370->380, gql 370->380, buttons 0->0, height 34555->35516, clicked 0
+    ↳ load step 23: articles 412->412, gql 412->412, buttons 0->0, height 34846->34846, clicked 0
+    ↳ load step 38: articles 390->400, gql 390->400, buttons 0->0, height 36004->36865, clicked 0
+    ↳ load step 38: articles 380->390, gql 380->390, buttons 0->0, height 35516->36376, clicked 0
+    [W1] → Thu thập được 412 comments
+[Priority recrawl] Tiến độ: 1/106 (post 2052738928793144: done)
+  [writer] Đã ghi 34596 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/183774529022936/comments.csv
+  [writer] Đã ghi 876 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/183774529022936/comments
+[Priority recrawl] Post 2052738928793144 mới lấy 412/768 (~54%), sẽ crawl lại ở lần chạy sau
+    ↳ load step 39: articles 390->400, gql 390->400, buttons 0->0, height 36376->37297, clicked 0
+    ↳ load step 39: articles 400->410, gql 400->410, buttons 0->0, height 36865->37725, clicked 0
+  [4/106] [W1] Post 876129098689544 (787 comments expected)
+    ↳ load step 40: articles 400->410, gql 400->410, buttons 0->0, height 37297->38217, clicked 0
+    ↳ load step 40: articles 410->420, gql 410->420, buttons 0->0, height 37725->38590, clicked 0
+    → Đã chọn All comments (All comments)
+    ↳ load step 1: articles 10->20, gql 10->20, buttons 0->0, height 2493->3473, clicked 0
+    ↳ load step 2: articles 20->30, gql 20->30, buttons 0->0, height 3473->4374, clicked 0
+    ↳ load step 3: articles 30->40, gql 30->40, buttons 0->0, height 4374->5474, clicked 0
+    ↳ load step 41: articles 410->420, gql 410->420, buttons 0->0, height 38217->39098, clicked 0
+    ↳ load step 41: articles 420->430, gql 420->430, buttons 0->0, height 38590->39490, clicked 0
+    ↳ load step 4: articles 40->50, gql 40->50, buttons 0->0, height 5474->6395, clicked 0
+    ↳ load step 5: articles 50->60, gql 50->60, buttons 0->0, height 6395->7355, clicked 0
+    ↳ load step 6: articles 60->62, gql 60->62, buttons 0->0, height 7355->7371, clicked 0
+    ↳ load step 7: articles 62->62, gql 62->62, buttons 0->0, height 7371->7371, clicked 0
+    ↳ load step 42: articles 420->430, gql 420->430, buttons 0->0, height 39098->39978, clicked 0
+    ↳ load step 42: articles 430->440, gql 430->440, buttons 0->0, height 39490->40399, clicked 0
+    ↳ load step 8: articles 62->62, gql 62->62, buttons 0->0, height 7371->7371, clicked 0
+    ↳ load step 9: articles 62->62, gql 62->62, buttons 0->0, height 7371->7371, clicked 0
+    ↳ load step 10: articles 62->62, gql 62->62, buttons 0->0, height 7371->7371, clicked 0
+    ↳ load step 43: articles 440->450, gql 440->450, buttons 0->0, height 40399->41219, clicked 0
+    ↳ load step 43: articles 430->440, gql 430->440, buttons 0->0, height 39978->40875, clicked 0
+    [W1] → Thu thập được 62 comments
+[Priority recrawl] Tiến độ: 2/106 (post 876129098689544: done)
+  [writer] Đã ghi 4157 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/184019427900518/comments.csv
+  [writer] Đã ghi 29 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/184019427900518/comments
+[Priority recrawl] Post 876129098689544 mới lấy 62/787 (~8%), sẽ crawl lại ở lần chạy sau
+  [5/106] [W1] Post 1007543171500303 (791 comments expected)
+    ↳ load step 44: articles 440->450, gql 440->450, buttons 0->0, height 40875->41747, clicked 0
+    ↳ load step 44: articles 450->460, gql 450->460, buttons 0->0, height 41219->42080, clicked 0
+    → Đã chọn All comments (All comments)
+    ↳ load step 45: articles 450->460, gql 450->460, buttons 0->0, height 41747->42668, clicked 0
+    ↳ load step 45: articles 460->470, gql 460->470, buttons 0->0, height 42080->42921, clicked 0
+    ↳ load step 1: articles 10->20, gql 10->20, buttons 0->0, height 1962->2890, clicked 0
+    ↳ load step 2: articles 20->30, gql 20->30, buttons 0->0, height 2890->3791, clicked 0
+    ↳ load step 3: articles 30->40, gql 30->40, buttons 0->0, height 3791->4759, clicked 0
+    ↳ load step 4: articles 40->50, gql 40->50, buttons 0->0, height 4759->5756, clicked 0
+    ↳ load step 46: articles 470->480, gql 470->480, buttons 0->0, height 42921->43849, clicked 0
+    ↳ load step 46: articles 460->470, gql 460->470, buttons 0->0, height 42668->43568, clicked 0
+    ↳ load step 5: articles 50->60, gql 50->60, buttons 0->0, height 5756->6645, clicked 0
+    ↳ load step 6: articles 60->70, gql 60->70, buttons 0->0, height 6645->7613, clicked 0
+    ↳ load step 7: articles 70->80, gql 70->80, buttons 0->0, height 7613->8542, clicked 0
+    ↳ load step 8: articles 80->90, gql 80->90, buttons 0->0, height 8542->9423, clicked 0
+    ↳ load step 47: articles 470->480, gql 470->480, buttons 0->0, height 43568->44445, clicked 0
+    ↳ load step 47: articles 480->490, gql 480->490, buttons 0->0, height 43849->44710, clicked 0
+    ↳ load step 9: articles 90->100, gql 90->100, buttons 0->0, height 9423->10343, clicked 0
+    ↳ load step 10: articles 100->110, gql 100->110, buttons 0->0, height 10343->11292, clicked 0
+    ↳ load step 11: articles 110->120, gql 110->120, buttons 0->0, height 11292->12172, clicked 0
+    ↳ load step 48: articles 480->490, gql 480->490, buttons 0->0, height 44445->45405, clicked 0
+    ↳ load step 48: articles 490->500, gql 490->500, buttons 0->0, height 44710->45590, clicked 0
+    ↳ load step 12: articles 120->130, gql 120->130, buttons 0->0, height 12172->13113, clicked 0
+    ↳ load step 13: articles 130->140, gql 130->140, buttons 0->0, height 13113->14041, clicked 0
+    ↳ load step 14: articles 140->150, gql 140->150, buttons 0->0, height 14041->14982, clicked 0
+    ↳ load step 15: articles 150->160, gql 150->160, buttons 0->0, height 14982->15902, clicked 0
+    ↳ load step 49: articles 500->510, gql 500->510, buttons 0->0, height 45590->46491, clicked 0
+    ↳ load step 49: articles 490->500, gql 490->500, buttons 0->0, height 45405->46306, clicked 0
+    ↳ load step 16: articles 160->170, gql 160->170, buttons 0->0, height 15902->16871, clicked 0
+    ↳ load step 17: articles 170->180, gql 170->180, buttons 0->0, height 16871->17791, clicked 0
+    ↳ load step 18: articles 180->190, gql 180->190, buttons 0->0, height 17791->18672, clicked 0
+    ↳ load step 50: articles 500->510, gql 500->510, buttons 0->0, height 46306->47246, clicked 0
+    ↳ load step 50: articles 510->520, gql 510->520, buttons 0->0, height 46491->47371, clicked 0
+    ↳ load step 19: articles 190->200, gql 190->200, buttons 0->0, height 18672->19512, clicked 0
+    ↳ load step 20: articles 200->210, gql 200->210, buttons 0->0, height 19512->20393, clicked 0
+    ↳ load step 21: articles 210->220, gql 210->220, buttons 0->0, height 20393->21293, clicked 0
+    ↳ load step 22: articles 220->230, gql 220->230, buttons 0->0, height 21293->22174, clicked 0
+    ↳ load step 51: articles 510->520, gql 510->520, buttons 0->0, height 47246->48147, clicked 0
+    ↳ load step 51: articles 520->530, gql 520->530, buttons 0->0, height 47371->48260, clicked 0
+    ↳ load step 23: articles 230->240, gql 230->240, buttons 0->0, height 22174->23094, clicked 0
+    ↳ load step 24: articles 240->250, gql 240->250, buttons 0->0, height 23094->23975, clicked 0
+    ↳ load step 25: articles 250->260, gql 250->260, buttons 0->0, height 23975->24795, clicked 0
+    ↳ load step 52: articles 520->530, gql 520->530, buttons 0->0, height 48147->49067, clicked 0
+    ↳ load step 52: articles 530->540, gql 530->540, buttons 0->0, height 48260->49189, clicked 0
+    ↳ load step 26: articles 260->270, gql 260->270, buttons 0->0, height 24795->25696, clicked 0
+    ↳ load step 27: articles 270->280, gql 270->280, buttons 0->0, height 25696->26576, clicked 0
+    ↳ load step 28: articles 280->290, gql 280->290, buttons 0->0, height 26576->27497, clicked 0
+    ↳ load step 53: articles 540->550, gql 540->550, buttons 0->0, height 49189->50109, clicked 0
+    ↳ load step 53: articles 530->540, gql 530->540, buttons 0->0, height 49067->49928, clicked 0
+    ↳ load step 29: articles 290->300, gql 290->300, buttons 0->0, height 27497->28357, clicked 0
+    ↳ load step 30: articles 300->310, gql 300->310, buttons 0->0, height 28357->29238, clicked 0
+    ↳ load step 31: articles 310->320, gql 310->320, buttons 0->0, height 29238->30118, clicked 0
+    ↳ load step 54: articles 550->560, gql 550->560, buttons 0->0, height 50109->50850, clicked 0
+    ↳ load step 54: articles 540->550, gql 540->550, buttons 0->0, height 49928->50788, clicked 0
+    ↳ load step 32: articles 320->330, gql 320->330, buttons 0->0, height 30118->31059, clicked 0
+    ↳ load step 33: articles 330->340, gql 330->340, buttons 0->0, height 31059->31919, clicked 0
+    ↳ load step 34: articles 340->350, gql 340->350, buttons 0->0, height 31919->32860, clicked 0
+    ↳ load step 55: articles 550->560, gql 550->560, buttons 0->0, height 50788->51685, clicked 0
+    ↳ load step 55: articles 560->564, gql 560->564, buttons 0->0, height 50850->50966, clicked 0
+    ↳ load step 35: articles 350->360, gql 350->360, buttons 0->0, height 32860->33740, clicked 0
+    ↳ load step 36: articles 360->370, gql 360->370, buttons 0->0, height 33740->34621, clicked 0
+    ↳ load step 37: articles 370->380, gql 370->380, buttons 0->0, height 34621->35482, clicked 0
+    ↳ load step 56: articles 560->570, gql 560->570, buttons 0->0, height 51685->52605, clicked 0
+    ↳ load step 56: articles 564->564, gql 564->564, buttons 0->0, height 50966->50966, clicked 0
+    ↳ load step 38: articles 380->390, gql 380->390, buttons 0->0, height 35482->36402, clicked 0
+    ↳ load step 39: articles 390->400, gql 390->400, buttons 0->0, height 36402->37283, clicked 0
+    ↳ load step 57: articles 570->580, gql 570->580, buttons 0->0, height 52605->53462, clicked 0
+    ↳ load step 57: articles 564->564, gql 564->564, buttons 0->0, height 50966->50966, clicked 0
+    ↳ load step 40: articles 400->410, gql 400->410, buttons 0->0, height 37283->38183, clicked 0
+    ↳ load step 41: articles 410->420, gql 410->420, buttons 0->0, height 38183->39084, clicked 0
+    ↳ load step 42: articles 420->430, gql 420->430, buttons 0->0, height 39084->39984, clicked 0
+    ↳ load step 58: articles 580->590, gql 580->590, buttons 0->0, height 53462->54422, clicked 0
+    ↳ load step 58: articles 564->564, gql 564->564, buttons 0->0, height 50966->50966, clicked 0
+    ↳ load step 43: articles 430->440, gql 430->440, buttons 0->0, height 39984->40865, clicked 0
+    ↳ load step 44: articles 440->450, gql 440->450, buttons 0->0, height 40865->41765, clicked 0
+    ↳ load step 45: articles 450->460, gql 450->460, buttons 0->0, height 41765->42606, clicked 0
+    ↳ load step 59: articles 590->600, gql 590->600, buttons 0->0, height 54422->55283, clicked 0
+    ↳ load step 59: articles 564->564, gql 564->564, buttons 0->0, height 50966->50966, clicked 0
+    ↳ load step 46: articles 460->470, gql 460->470, buttons 0->0, height 42606->43506, clicked 0
+    ↳ load step 47: articles 470->480, gql 470->480, buttons 0->0, height 43506->44387, clicked 0
+    ↳ load step 60: articles 600->610, gql 600->610, buttons 0->0, height 55283->56183, clicked 0
+    ↳ load step 48: articles 480->490, gql 480->490, buttons 0->0, height 44387->45295, clicked 0
+    [W3] → Thu thập được 564 comments
+[Priority recrawl] Tiến độ: 3/106 (post 24705374855815827: done)
+    ↳ load step 49: articles 490->500, gql 490->500, buttons 0->0, height 45295->46236, clicked 0
+  [writer] Đã ghi 43656 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments.csv
+  [writer] Đã ghi 89 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments
+  [6/106] [W3] Post 891591343820660 (801 comments expected)
+    ↳ load step 50: articles 500->510, gql 500->510, buttons 0->0, height 46236->47116, clicked 0
+    ↳ load step 61: articles 610->611, gql 610->611, buttons 0->0, height 56183->56055, clicked 0
+    ↳ load step 51: articles 510->520, gql 510->520, buttons 0->0, height 47116->47997, clicked 0
+    ↳ load step 52: articles 520->530, gql 520->530, buttons 0->0, height 47997->48937, clicked 0
+    → Đã chọn All comments (All comments)
+    ↳ load step 62: articles 611->611, gql 611->611, buttons 0->0, height 56055->56055, clicked 0
+    ↳ load step 53: articles 530->540, gql 530->540, buttons 0->0, height 48937->49878, clicked 0
+    ↳ load step 54: articles 540->550, gql 540->550, buttons 0->0, height 49878->50758, clicked 0
+    ↳ load step 55: articles 550->560, gql 550->560, buttons 0->0, height 50758->51619, clicked 0
+    ↳ load step 63: articles 611->611, gql 611->611, buttons 0->0, height 56055->56055, clicked 0
+    ↳ load step 56: articles 560->570, gql 560->570, buttons 0->0, height 51619->52479, clicked 0
+    ↳ load step 57: articles 570->580, gql 570->580, buttons 0->0, height 52479->53360, clicked 0
+    ↳ load step 64: articles 611->611, gql 611->611, buttons 0->0, height 56055->56055, clicked 0
+    ↳ load step 58: articles 580->590, gql 580->590, buttons 0->0, height 53360->54348, clicked 0
+    ↳ load step 59: articles 590->600, gql 590->600, buttons 0->0, height 54348->55309, clicked 0
+    ↳ load step 65: articles 611->611, gql 611->611, buttons 0->0, height 56055->56055, clicked 0
+    ↳ load step 60: articles 600->610, gql 600->610, buttons 0->0, height 55309->56209, clicked 0
+    ↳ load step 61: articles 610->620, gql 610->620, buttons 0->0, height 56209->57050, clicked 0
+    ↳ load step 62: articles 620->630, gql 620->630, buttons 0->0, height 57050->57950, clicked 0
+    ↳ load step 63: articles 630->633, gql 630->633, buttons 0->0, height 57950->57932, clicked 0
+    [W2] → Thu thập được 611 comments
+[Priority recrawl] Tiến độ: 4/106 (post 24718257371194242: done)
+  [writer] Đã ghi 43807 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments.csv
+  [writer] Đã ghi 89 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments
+  [7/106] [W2] Post 25494031200283518 (804 comments expected)
+    ↳ load step 64: articles 633->633, gql 633->633, buttons 0->0, height 57932->57932, clicked 0
+    ↳ load step 65: articles 633->633, gql 633->633, buttons 0->0, height 57932->57932, clicked 0
+    ↳ load step 66: articles 633->633, gql 633->633, buttons 0->0, height 57932->57932, clicked 0
+    → Đã chọn All comments (All comments)
+    ↳ load step 67: articles 633->633, gql 633->633, buttons 0->0, height 57932->57932, clicked 0
+    [W1] → Thu thập được 633 comments
+[Priority recrawl] Tiến độ: 5/106 (post 1007543171500303: done)
+  [writer] Đã ghi 24893 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/nuoiconbangsuacongthu/comments.csv
+  [writer] Đã ghi 370 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/nuoiconbangsuacongthu/comments
+  [8/106] [W1] Post 2046723636061340 (805 comments expected)
+    → Đã chọn All comments (All comments)
+    ↳ load step 1: articles 10->174, gql 14->178, buttons 53->0, height 1902->18251, clicked 3
+    ↳ load step 1: articles 10->385, gql 14->389, buttons 119->207, height 1638->43028, clicked 8
+    ↳ load step 2: articles 174->213, gql 178->217, buttons 0->0, height 18251->22119, clicked 3
+    ↳ load step 1: articles 10->369, gql 14->373, buttons 119->163, height 1836->41289, clicked 9
+    ↳ load step 2: articles 385->510, gql 389->510, buttons 207->0, height 43028->53747, clicked 9
+    ↳ load step 3: articles 510->510, gql 510->510, buttons 0->0, height 53747->53747, clicked 0
+    ↳ load step 4: articles 510->510, gql 510->510, buttons 0->0, height 53747->53747, clicked 0
+    ↳ load step 2: articles 369->444, gql 373->444, buttons 163->0, height 41289->47803, clicked 8
+    ↳ load step 5: articles 510->510, gql 510->510, buttons 0->0, height 53747->53747, clicked 0
+    ↳ load step 3: articles 444->444, gql 444->444, buttons 0->0, height 47803->47803, clicked 0
+    ↳ load step 4: articles 444->444, gql 444->444, buttons 0->0, height 47803->47803, clicked 0
+    ↳ load step 6: articles 510->510, gql 510->510, buttons 0->0, height 53747->53747, clicked 0
+    ↳ load step 5: articles 444->444, gql 444->444, buttons 0->0, height 47803->47803, clicked 0
+    ↳ load step 6: articles 444->444, gql 444->444, buttons 0->0, height 47803->47803, clicked 0
+    [W3] → Thu thập được 510 comments
+[Priority recrawl] Tiến độ: 6/106 (post 891591343820660: done)
+  [writer] Đã ghi 8325 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/402671786045954/comments.csv
+  [writer] Đã ghi 20 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/402671786045954/comments
+[Priority recrawl] Post 891591343820660 mới lấy 510/801 (~64%), sẽ crawl lại ở lần chạy sau
+  [9/106] [W3] Post 2045832386150465 (805 comments expected)
+    [W2] → Thu thập được 444 comments
+[Priority recrawl] Tiến độ: 7/106 (post 25494031200283518: done)
+  [writer] Đã ghi 44251 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments.csv
+  [writer] Đã ghi 90 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments
+[Priority recrawl] Post 25494031200283518 mới lấy 444/804 (~55%), sẽ crawl lại ở lần chạy sau
+  [10/106] [W2] Post 24716169804736332 (817 comments expected)
+    ↳ load step 3: articles 213->545, gql 217->549, buttons 0->42, height 22119->56097, clicked 9
+    → Đã chọn All comments (All comments)
+    → Đã chọn All comments (All comments)
+    ↳ load step 4: articles 545->549, gql 549->549, buttons 42->0, height 56097->56409, clicked 1
+    ↳ load step 1: articles 10->20, gql 10->20, buttons 0->0, height 1834->2735, clicked 0
+    ↳ load step 2: articles 20->30, gql 20->30, buttons 0->0, height 2735->3635, clicked 0
+    ↳ load step 5: articles 549->549, gql 549->549, buttons 0->0, height 56409->56409, clicked 0
+    ↳ load step 3: articles 30->40, gql 30->40, buttons 0->0, height 3635->4516, clicked 0
+    ↳ load step 6: articles 549->549, gql 549->549, buttons 0->0, height 56409->56409, clicked 0
+    ↳ load step 4: articles 40->50, gql 40->50, buttons 0->0, height 4516->5396, clicked 0
+    ↳ load step 7: articles 549->549, gql 549->549, buttons 0->0, height 56409->56409, clicked 0
+    ↳ load step 5: articles 50->60, gql 50->60, buttons 0->0, height 5396->6317, clicked 0
+    ↳ load step 6: articles 60->70, gql 60->70, buttons 0->0, height 6317->7237, clicked 0
+    ↳ load step 8: articles 549->549, gql 549->549, buttons 0->0, height 56409->56409, clicked 0
+    ↳ load step 7: articles 70->80, gql 70->80, buttons 0->0, height 7237->8118, clicked 0
+    [W1] → Thu thập được 549 comments
+[Priority recrawl] Tiến độ: 8/106 (post 2046723636061340: done)
+    ↳ load step 8: articles 80->90, gql 80->90, buttons 0->0, height 8118->9038, clicked 0
+  [writer] Đã ghi 35145 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/183774529022936/comments.csv
+  [writer] Đã ghi 877 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/183774529022936/comments
+  [11/106] [W1] Post 1248272567438303 (875 comments expected)
+    ↳ load step 9: articles 90->100, gql 90->100, buttons 0->0, height 9038->9919, clicked 0
+    → Đã chọn All comments (All comments)
+    ↳ load step 10: articles 100->110, gql 100->110, buttons 0->0, height 9919->10839, clicked 0
+    ↳ load step 11: articles 110->120, gql 110->120, buttons 0->0, height 10839->11760, clicked 0
+    ↳ load step 1: articles 10->348, gql 13->351, buttons 75->53, height 2123->37660, clicked 8
+    ↳ load step 12: articles 120->130, gql 120->130, buttons 0->0, height 11760->12580, clicked 0
+    ↳ load step 13: articles 130->140, gql 130->140, buttons 0->0, height 12580->13521, clicked 0
+    ↳ load step 2: articles 348->388, gql 351->388, buttons 53->0, height 37660->40864, clicked 3
+    ↳ load step 14: articles 140->150, gql 140->150, buttons 0->0, height 13521->14421, clicked 0
+    ↳ load step 3: articles 388->388, gql 388->388, buttons 0->0, height 40864->40864, clicked 0
+    ↳ load step 4: articles 388->388, gql 388->388, buttons 0->0, height 40864->40864, clicked 0
+    ↳ load step 15: articles 150->160, gql 150->160, buttons 0->0, height 14421->15302, clicked 0
+    ↳ load step 5: articles 388->388, gql 388->388, buttons 0->0, height 40864->40864, clicked 0
+    ↳ load step 6: articles 388->388, gql 388->388, buttons 0->0, height 40864->40864, clicked 0
+    ↳ load step 16: articles 160->170, gql 160->170, buttons 0->0, height 15302->16182, clicked 0
+    [W3] → Thu thập được 388 comments
+[Priority recrawl] Tiến độ: 9/106 (post 2045832386150465: done)
+  [writer] Đã ghi 35533 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/183774529022936/comments.csv
+  [writer] Đã ghi 878 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/183774529022936/comments
+[Priority recrawl] Post 2045832386150465 mới lấy 388/805 (~48%), sẽ crawl lại ở lần chạy sau
+  [12/106] [W3] Post 25631617253191578 (925 comments expected)
+    ↳ load step 17: articles 170->180, gql 170->180, buttons 0->0, height 16182->17063, clicked 0
+    ↳ load step 18: articles 180->190, gql 180->190, buttons 0->0, height 17063->17943, clicked 0
+    → Đã chọn All comments (All comments)
+    ↳ load step 19: articles 190->200, gql 190->200, buttons 0->0, height 17943->18864, clicked 0
+    ↳ load step 1: articles 10->183, gql 14->183, buttons 130->0, height 2295->18752, clicked 8
+    ↳ load step 20: articles 200->210, gql 200->210, buttons 0->0, height 18864->19764, clicked 0
+    ↳ load step 1: articles 10->37, gql 12->39, buttons 42->0, height 2042->4725, clicked 3
+    ↳ load step 21: articles 210->220, gql 210->220, buttons 0->0, height 19764->20625, clicked 0
+    ↳ load step 22: articles 220->230, gql 220->230, buttons 0->0, height 20625->21573, clicked 0
+    ↳ load step 23: articles 230->240, gql 230->240, buttons 0->0, height 21573->22494, clicked 0
+    ↳ load step 2: articles 183->241, gql 183->241, buttons 0->0, height 18752->24465, clicked 4
+    ↳ load step 2: articles 37->75, gql 39->77, buttons 0->0, height 4725->9020, clicked 2
+    ↳ load step 24: articles 240->250, gql 240->250, buttons 0->0, height 22494->23482, clicked 0
+    ↳ load step 25: articles 250->260, gql 250->260, buttons 0->0, height 23482->24383, clicked 0
+    ↳ load step 26: articles 260->270, gql 260->270, buttons 0->0, height 24383->25263, clicked 0
+    ↳ load step 3: articles 75->111, gql 77->113, buttons 0->0, height 9020->11831, clicked 1
+    ↳ load step 27: articles 270->280, gql 270->280, buttons 0->0, height 25263->26144, clicked 0
+    ↳ load step 4: articles 111->123, gql 113->125, buttons 0->0, height 11831->12767, clicked 1
+    ↳ load step 28: articles 280->290, gql 280->290, buttons 0->0, height 26144->27024, clicked 0
+    ↳ load step 29: articles 290->300, gql 290->300, buttons 0->0, height 27024->27973, clicked 0
+    ↳ load step 5: articles 123->146, gql 125->148, buttons 0->0, height 12767->14567, clicked 1
+    ↳ load step 30: articles 300->310, gql 300->310, buttons 0->0, height 27973->28814, clicked 0
+    ↳ load step 31: articles 310->320, gql 310->320, buttons 0->0, height 28814->29714, clicked 0
+    ↳ load step 6: articles 146->172, gql 148->174, buttons 0->0, height 14567->16903, clicked 2
+    ↳ load step 32: articles 320->330, gql 320->330, buttons 0->0, height 29714->30615, clicked 0
+    ↳ load step 33: articles 330->340, gql 330->340, buttons 0->0, height 30615->31395, clicked 0
+    ↳ load step 7: articles 172->185, gql 174->187, buttons 0->0, height 16903->17962, clicked 1
+    ↳ load step 34: articles 340->350, gql 340->350, buttons 0->0, height 31395->32316, clicked 0
+    ↳ load step 35: articles 350->360, gql 350->360, buttons 0->0, height 32316->33176, clicked 0
+    ↳ load step 8: articles 185->234, gql 187->236, buttons 0->0, height 17962->21783, clicked 2
+    ↳ load step 36: articles 360->370, gql 360->370, buttons 0->0, height 33176->34037, clicked 0
+    ↳ load step 3: articles 241->468, gql 241->468, buttons 0->0, height 24465->45654, clicked 3
+    ↳ load step 37: articles 370->380, gql 370->380, buttons 0->0, height 34037->34977, clicked 0
+    ↳ load step 38: articles 380->390, gql 380->390, buttons 0->0, height 34977->35858, clicked 0
+    ↳ load step 39: articles 390->400, gql 390->400, buttons 0->0, height 35858->36718, clicked 0
+    ↳ load step 40: articles 400->410, gql 400->410, buttons 0->0, height 36718->37667, clicked 0
+    ↳ load step 9: articles 234->302, gql 236->304, buttons 0->0, height 21783->27269, clicked 2
+    ↳ load step 41: articles 410->420, gql 410->420, buttons 0->0, height 37667->38567, clicked 0
+    ↳ load step 42: articles 420->430, gql 420->430, buttons 0->0, height 38567->39408, clicked 0
+    ↳ load step 43: articles 430->440, gql 430->440, buttons 0->0, height 39408->40328, clicked 0
+    ↳ load step 44: articles 440->450, gql 440->450, buttons 0->0, height 40328->41269, clicked 0
+    ↳ load step 45: articles 450->460, gql 450->460, buttons 0->0, height 41269->42169, clicked 0
+    ↳ load step 46: articles 460->470, gql 460->470, buttons 0->0, height 42169->43030, clicked 0
+    ↳ load step 47: articles 470->480, gql 470->480, buttons 0->0, height 43030->43978, clicked 0
+    ↳ load step 48: articles 480->490, gql 480->490, buttons 0->0, height 43978->44819, clicked 0
+    ↳ load step 10: articles 302->432, gql 304->434, buttons 0->0, height 27269->38193, clicked 3
+    ↳ load step 49: articles 490->500, gql 490->500, buttons 0->0, height 44819->45720, clicked 0
+    ↳ load step 4: articles 468->631, gql 468->631, buttons 0->0, height 45654->61067, clicked 7
+    ↳ load step 50: articles 500->510, gql 500->510, buttons 0->0, height 45720->46640, clicked 0
+    ↳ load step 5: articles 631->631, gql 631->631, buttons 0->0, height 61067->61067, clicked 0
+    ↳ load step 11: articles 432->444, gql 434->446, buttons 0->0, height 38193->39238, clicked 1
+    ↳ load step 51: articles 510->520, gql 510->520, buttons 0->0, height 46640->47521, clicked 0
+    ↳ load step 52: articles 520->530, gql 520->530, buttons 0->0, height 47521->48401, clicked 0
+    ↳ load step 6: articles 631->631, gql 631->631, buttons 0->0, height 61067->61067, clicked 0
+    ↳ load step 12: articles 444->457, gql 446->457, buttons 0->0, height 39238->40145, clicked 1
+    ↳ load step 53: articles 530->540, gql 530->540, buttons 0->0, height 48401->49242, clicked 0
+    ↳ load step 7: articles 631->631, gql 631->631, buttons 0->0, height 61067->61067, clicked 0
+    ↳ load step 13: articles 457->457, gql 457->457, buttons 0->0, height 40145->40145, clicked 0
+    ↳ load step 54: articles 540->550, gql 540->550, buttons 0->0, height 49242->50122, clicked 0
+    ↳ load step 14: articles 457->457, gql 457->457, buttons 0->0, height 40145->40145, clicked 0
+    ↳ load step 8: articles 631->631, gql 631->631, buttons 0->0, height 61067->61067, clicked 0
+    ↳ load step 55: articles 550->558, gql 550->558, buttons 0->0, height 50122->50604, clicked 0
+    ↳ load step 15: articles 457->457, gql 457->457, buttons 0->0, height 40145->40145, clicked 0
+    ↳ load step 56: articles 558->558, gql 558->558, buttons 0->0, height 50604->50604, clicked 0
+    ↳ load step 16: articles 457->457, gql 457->457, buttons 0->0, height 40145->40145, clicked 0
+    [W1] → Thu thập được 631 comments
+[Priority recrawl] Tiến độ: 10/106 (post 1248272567438303: done)
+  [writer] Đã ghi 7869 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/hoiriviewsua/comments.csv
+  [writer] Đã ghi 135 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/hoiriviewsua/comments
+  [13/106] [W1] Post 25871733232513311 (1857 comments expected)
+    ↳ load step 57: articles 558->558, gql 558->558, buttons 0->0, height 50604->50604, clicked 0
+    ↻ Post 25871733232513311 hiện page unavailable, reload lần 1/2
+    ↻ Post 25871733232513311 hiện page unavailable, reload lần 2/2
+    → Post 25871733232513311 vẫn unavailable sau reload, bỏ qua
+    [W1] → Thu thập được 0 comments
+[Priority recrawl] Tiến độ: 11/106 (post 25871733232513311: done)
+    [W3] → Thu thập được 457 comments
+[Priority recrawl] Tiến độ: 12/106 (post 25631617253191578: done)
+  [writer] Đã ghi 44251 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments.csv
+  [writer] Đã ghi 90 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments
+[Priority recrawl] Post 25871733232513311 mới lấy 0/1857 (~0%), sẽ crawl lại ở lần chạy sau
+  [writer] Đã ghi 44708 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments.csv
+  [writer] Đã ghi 91 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments
+[Priority recrawl] Post 25631617253191578 mới lấy 457/925 (~49%), sẽ crawl lại ở lần chạy sau
+  [14/106] [W1] Post 819562757690186 (2605 comments expected)
+    ↳ load step 58: articles 558->558, gql 558->558, buttons 0->0, height 50604->50604, clicked 0
+  [15/106] [W3] Post 4484546105135619 (2601 comments expected)
+    ↳ load step 59: articles 558->558, gql 558->558, buttons 0->0, height 50604->50604, clicked 0
+    → Đã chọn All comments (All comments)
+    → Đã chọn All comments (All comments)
+    [W2] → Thu thập được 558 comments
+[Priority recrawl] Tiến độ: 13/106 (post 24716169804736332: done)
+  [writer] Đã ghi 45266 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments.csv
+  [writer] Đã ghi 92 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/6183167068463220/comments
+  [16/106] [W2] Post 1814310452635994 (2567 comments expected)
+    → Đã chọn All comments (All comments)
+    ↳ load step 1: articles 10->243, gql 13->246, buttons 141->0, height 1672->23333, clicked 8
+    ↳ load step 1: articles 10->500, gql 12->502, buttons 75->97, height 2119->49778, clicked 8
+    ↳ load step 2: articles 243->267, gql 246->270, buttons 0->0, height 23333->25886, clicked 2
+    ↳ load step 3: articles 267->277, gql 270->280, buttons 0->0, height 25886->26926, clicked 0
+    ↳ load step 1: articles 10->299, gql 11->300, buttons 97->180, height 2176->33136, clicked 8
+    ↳ load step 4: articles 277->291, gql 280->294, buttons 0->0, height 26926->28251, clicked 1
+    ↳ load step 2: articles 500->798, gql 502->800, buttons 97->0, height 49778->78500, clicked 8
+    ↳ load step 2: articles 299->651, gql 300->652, buttons 180->64, height 33136->68391, clicked 11
+    ↳ load step 5: articles 291->637, gql 294->640, buttons 0->152, height 28251->63069, clicked 8
+    ↳ load step 3: articles 798->983, gql 800->985, buttons 0->0, height 78500->96543, clicked 3
+    ↳ load step 4: articles 983->1080, gql 985->1082, buttons 0->0, height 96543->105936, clicked 3
+    ↳ load step 3: articles 651->906, gql 652->907, buttons 64->190, height 68391->95256, clicked 4
+    ↳ load step 6: articles 637->988, gql 640->991, buttons 152->207, height 63069->96930, clicked 8
+    ↳ load step 5: articles 1080->1427, gql 1082->1429, buttons 0->152, height 105936->139611, clicked 7
+    ↳ load step 4: articles 906->1136, gql 907->1137, buttons 190->239, height 95256->120845, clicked 4
+    ↳ load step 6: articles 1427->1498, gql 1429->1500, buttons 152->0, height 139611->146391, clicked 5
+    ↳ load step 7: articles 1498->1542, gql 1500->1542, buttons 0->0, height 146391->150430, clicked 3
+    ↳ load step 8: articles 1542->1542, gql 1542->1542, buttons 0->0, height 150430->150430, clicked 0
+    ↳ load step 9: articles 1542->1542, gql 1542->1542, buttons 0->0, height 150430->150430, clicked 0
+    ↳ load step 10: articles 1542->1542, gql 1542->1542, buttons 0->0, height 150430->150430, clicked 0
+    ↳ load step 11: articles 1542->1542, gql 1542->1542, buttons 0->0, height 150430->150430, clicked 0
+    ↳ load step 7: articles 988->1302, gql 991->1305, buttons 207->196, height 96930->127226, clicked 8
+    [W1] → Thu thập được 1542 comments
+[Priority recrawl] Tiến độ: 14/106 (post 819562757690186: done)
+  [writer] Đã ghi 9847 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/402671786045954/comments.csv
+  [writer] Đã ghi 20 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/402671786045954/comments
+[Priority recrawl] Post 819562757690186 mới lấy 1542/2605 (~59%), sẽ crawl lại ở lần chạy sau
+  [17/106] [W1] Post 807409525561502 (2527 comments expected)
+    → Đã chọn All comments (All comments)
+    ↳ load step 5: articles 1136->1347, gql 1137->1348, buttons 239->224, height 120845->143962, clicked 6
+    ↳ load step 1: articles 10->182, gql 11->183, buttons 97->0, height 2320->18104, clicked 7
+    ↳ load step 2: articles 182->204, gql 183->205, buttons 0->0, height 18104->19850, clicked 1
+    ↳ load step 3: articles 204->214, gql 205->215, buttons 0->0, height 19850->20590, clicked 0
+    ↳ load step 4: articles 214->226, gql 215->227, buttons 0->0, height 20590->21635, clicked 1
+    ↳ load step 5: articles 226->247, gql 227->248, buttons 0->0, height 21635->23291, clicked 1
+    ↳ load step 6: articles 247->270, gql 248->271, buttons 0->0, height 23291->25206, clicked 2
+    ↳ load step 7: articles 270->280, gql 271->281, buttons 0->0, height 25206->25967, clicked 0
+    ↳ load step 8: articles 280->317, gql 281->318, buttons 0->0, height 25967->29156, clicked 3
+    ↳ load step 9: articles 317->328, gql 318->329, buttons 0->0, height 29156->30018, clicked 1
+    ↳ load step 10: articles 328->339, gql 329->340, buttons 0->0, height 30018->30921, clicked 1
+    ↳ load step 11: articles 339->360, gql 340->361, buttons 0->0, height 30921->32557, clicked 1
+    ↳ load step 12: articles 360->372, gql 361->373, buttons 0->0, height 32557->33550, clicked 1
+    ↳ load step 13: articles 372->394, gql 373->395, buttons 0->0, height 33550->35267, clicked 1
+    ↳ load step 14: articles 394->404, gql 395->405, buttons 0->0, height 35267->36008, clicked 0
+    ↳ load step 15: articles 404->417, gql 405->418, buttons 0->0, height 36008->37175, clicked 2
+    ↳ load step 16: articles 417->465, gql 418->466, buttons 0->0, height 37175->41399, clicked 1
+    ↳ load step 17: articles 465->475, gql 466->476, buttons 0->0, height 41399->42207, clicked 0
+    ↳ load step 18: articles 475->496, gql 476->497, buttons 0->0, height 42207->43947, clicked 1
+    ↳ load step 19: articles 496->506, gql 497->507, buttons 0->0, height 43947->44756, clicked 0
+    ↳ load step 20: articles 506->516, gql 507->517, buttons 0->0, height 44756->45584, clicked 0
+    ↳ load step 21: articles 516->527, gql 517->528, buttons 0->0, height 45584->46521, clicked 0
+    ↳ load step 22: articles 527->537, gql 528->538, buttons 0->0, height 46521->47330, clicked 0
+    ↳ load step 23: articles 537->549, gql 538->550, buttons 0->0, height 47330->48383, clicked 1
+    ↳ load step 24: articles 549->559, gql 550->560, buttons 0->0, height 48383->49124, clicked 0
+    ↳ load step 25: articles 559->569, gql 560->570, buttons 0->0, height 49124->49932, clicked 0
+    ↳ load step 26: articles 569->590, gql 570->591, buttons 0->0, height 49932->51704, clicked 1
+    ↳ load step 27: articles 590->601, gql 591->602, buttons 0->0, height 51704->52671, clicked 1
+    ↳ load step 28: articles 601->622, gql 602->623, buttons 0->0, height 52671->54442, clicked 1
+    ↳ load step 29: articles 622->634, gql 623->635, buttons 0->0, height 54442->55464, clicked 1
+    ↳ load step 30: articles 634->644, gql 635->645, buttons 0->0, height 55464->56340, clicked 0
+    ↳ load step 31: articles 644->656, gql 645->657, buttons 0->0, height 56340->57325, clicked 1
+    ↳ load step 32: articles 656->691, gql 657->692, buttons 0->0, height 57325->60190, clicked 2
+    ↳ load step 33: articles 691->0, gql 692->703, buttons 0->0, height 60190->709, clicked 2
+    ↳ load step 34: articles 0->0, gql 703->703, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 35: articles 0->0, gql 703->703, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 36: articles 0->0, gql 703->703, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 37: articles 0->0, gql 703->703, buttons 0->0, height 709->709, clicked 0
+    [W1] → Thu thập được 703 comments
+[Priority recrawl] Tiến độ: 15/106 (post 807409525561502: done)
+  [writer] Đã ghi 4840 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/184019427900518/comments.csv
+  [writer] Đã ghi 29 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/184019427900518/comments
+[Priority recrawl] Post 807409525561502 mới lấy 703/2527 (~28%), sẽ crawl lại ở lần chạy sau
+  [18/106] [W1] Post 2507668429731976 (1260 comments expected)
+    ↳ load step 8: articles 1302->0, gql 1305->1618, buttons 196->0, height 127226->719, clicked 8
+    ↳ load step 6: articles 1347->1472, gql 1348->1472, buttons 224->0, height 143962->157424, clicked 6
+    ↳ load step 9: articles 10->0, gql 1618->1628, buttons 130->0, height 1561->709, clicked 1
+    ↳ load step 10: articles 0->0, gql 1628->1628, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 11: articles 0->0, gql 1628->1628, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 12: articles 0->0, gql 1628->1628, buttons 0->0, height 709->709, clicked 0
+    ⚠️ Không tìm thấy/chưa đổi được nút All comments
+    ↻ Post 2507668429731976 bị unavailable sau khi chọn All comments, reload và dùng filter mặc định
+    ↻ Post 2507668429731976 hiện page unavailable, reload lần 1/2
+    ↳ load step 13: articles 0->0, gql 1628->1628, buttons 0->0, height 709->709, clicked 0
+    [W3] → Thu thập được 1628 comments
+[Priority recrawl] Tiến độ: 16/106 (post 4484546105135619: done)
+  [writer] Đã ghi 19518 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/riviesuacongthuc/comments.csv
+  [writer] Đã ghi 506 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/riviesuacongthuc/comments
+[Priority recrawl] Post 4484546105135619 mới lấy 1628/2601 (~63%), sẽ crawl lại ở lần chạy sau
+    ↳ load step 7: articles 1472->1472, gql 1472->1472, buttons 0->0, height 157424->157424, clicked 0
+  [19/106] [W3] Post 787489054220216 (2451 comments expected)
+    ↳ load step 1: articles 10->0, gql 0->10, buttons 42->0, height 1472->709, clicked 1
+    ↳ load step 2: articles 0->0, gql 10->10, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 8: articles 1472->1472, gql 1472->1472, buttons 0->0, height 157424->157424, clicked 0
+    ⚠️ Không tìm thấy/chưa đổi được nút All comments
+    ↻ Post 787489054220216 bị unavailable sau khi chọn All comments, reload và dùng filter mặc định
+    ↻ Post 787489054220216 hiện page unavailable, reload lần 1/2
+    ↳ load step 3: articles 0->0, gql 10->10, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 4: articles 0->0, gql 10->10, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 1: articles 10->0, gql 0->10, buttons 141->0, height 1760->709, clicked 1
+    ↳ load step 9: articles 1472->1472, gql 1472->1472, buttons 0->0, height 157424->157424, clicked 0
+    ↳ load step 5: articles 0->0, gql 10->10, buttons 0->0, height 709->709, clicked 0
+    ↳ load step 2: articles 0->0, gql 10->10, buttons 0->0, height 709->709, clicked 0
+
+[Priority recrawl] Nhận tín hiệu SIGTERM, đang dừng êm (ghi lại dữ liệu dở dang, có thể mất vài giây)...
+
+    ↳ load step 10: articles 1472->1472, gql 1472->1472, buttons 0->0, height 157424->157424, clicked 0
+    ↳ load step 3: articles 0->0, gql 10->10, buttons 0->0, height 709->709, clicked 0
+    ↳ dừng sớm: nhận tín hiệu dừng, giữ lại 10 comment đã thu thập
+    [W1] → Thu thập được 10 comments
+[Priority recrawl] Tiến độ: 17/106 (post 2507668429731976: done)
+  [writer] Đã ghi 24415 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/804858320013004/comments.csv
+  [writer] Đã ghi 63 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/804858320013004/comments
+[Priority recrawl] Post 2507668429731976 mới lấy 10/1260 (~1%), sẽ crawl lại ở lần chạy sau
+  [ERROR] crawlPostComments (787489054220216): locator.all: Target page, context or browser has been closed
+    [W3] Bỏ qua post 787489054220216 vì lỗi load, chưa đánh dấu crawl xong
+[Priority recrawl] Tiến độ: 18/106 (post 787489054220216: failed)
+  [W3] Nhận tín hiệu dừng, không nhận post mới
+  [W1] Nhận tín hiệu dừng, không nhận post mới
+    [W2] → Thu thập được 1472 comments
+[Priority recrawl] Tiến độ: 19/106 (post 1814310452635994: done)
+  [writer] Đã ghi 36985 comments → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/183774529022936/comments.csv
+  [writer] Đã ghi 878 file comment theo post → /Users/huongquadeo/Desktop/GraphQL Group/fb-group-crawler/data/183774529022936/comments
+[Priority recrawl] Post 1814310452635994 mới lấy 1472/2567 (~57%), sẽ crawl lại ở lần chạy sau
+  [W2] Nhận tín hiệu dừng, không nhận post mới
+[Phase 2] Hoàn thành. Tổng comments: 188513 (11174 mới/updated)
+[Priority recrawl] Đã dừng êm theo yêu cầu, dữ liệu dở dang đã được ghi lại.

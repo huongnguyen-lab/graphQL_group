@@ -245,13 +245,16 @@ async function clickCommentControls(page) {
   });
 }
 
-async function clickAll(page, selectors, waitTime = 700) {
+async function clickAll(page, selectors, waitTime = 700, maxPerCall = 8) {
   let totalClicked = 0;
 
   for (const selector of selectors) {
     const buttons = await page.locator(selector).all();
 
-    for (const button of buttons) {
+    // Bấm dồn dập hàng chục nút liên tiếp (không nghỉ) từng khiến khu vực
+    // comment của Facebook bị sập/thu gọn giữa chừng. Giới hạn số nút bấm mỗi
+    // lần gọi; số còn lại sẽ được lấy lại (fresh) ở vòng scroll kế tiếp.
+    for (const button of buttons.slice(0, maxPerCall)) {
       try {
         const visible = await button.isVisible().catch(() => false);
         if (!visible) continue;
@@ -760,8 +763,10 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
       }
 
       const oldComments = commentsByPost.get(post.post_url) || [];
+      let finalComments = newComments;
       if (newComments.length < oldComments.length) {
         console.log(`    [W${workerId}] Giữ bản cũ ${oldComments.length} comments vì retry chỉ lấy ${newComments.length}`);
+        finalComments = oldComments;
       } else {
         commentsByPost.set(post.post_url, newComments);
         totalNew += newComments.length;
@@ -771,7 +776,7 @@ async function crawlComments(browser, postsToUpdate, existingComments = [], opti
         const snapshotComments = flattenCommentsMap(commentsByPost);
         writeQueue = writeQueue
           .catch(() => {})
-          .then(() => options.onProgressWrite(snapshotComments, post, newComments));
+          .then(() => options.onProgressWrite(snapshotComments, post, finalComments));
         await writeQueue;
       }
 
