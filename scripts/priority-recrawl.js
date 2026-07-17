@@ -133,8 +133,13 @@ function saveState(state) {
   writeJson(STATE_FILE, state);
 }
 
-function rebuildAllComments() {
-  const result = spawnSync(process.execPath, [path.join(__dirname, 'build-all-comments.js')], {
+const REBUILD_ALL_COMMENTS_EVERY = Number(process.env.PRIORITY_REBUILD_ALL_COMMENTS_EVERY || 15);
+let rebuildAllCommentsCounter = 0;
+
+function rebuildAllComments(force = false) {
+  rebuildAllCommentsCounter += 1;
+  if (!force && rebuildAllCommentsCounter % REBUILD_ALL_COMMENTS_EVERY !== 0) return;
+  const result = spawnSync(process.execPath, ['--max-old-space-size=6144', path.join(__dirname, 'build-all-comments.js')], {
     cwd: ROOT_DIR,
     env: { ...process.env, SKIP_ALL_COMMENTS_BACKUP: '1' },
     encoding: 'utf8',
@@ -324,6 +329,8 @@ async function main() {
   } finally {
     await browser.close().catch(() => {});
   }
+
+  rebuildAllComments(true); // đảm bảo all_comments.csv luôn khớp dữ liệu mới nhất khi dừng/xong
 
   console.log(stopRequested ? '[Priority recrawl] Đã dừng êm theo yêu cầu, dữ liệu dở dang đã được ghi lại.' : '[Priority recrawl] HOÀN THÀNH batch này.');
 }
