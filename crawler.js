@@ -22,6 +22,13 @@ async function runCommentPhase(browser, groupUrl, posts, oldSnapshot) {
     }
   }
 
+  const beforeZeroCommentFilter = postsToUpdate.length;
+  postsToUpdate = postsToUpdate.filter(p => Number(p.comment || 0) > 0);
+  const skippedZeroCommentPosts = beforeZeroCommentFilter - postsToUpdate.length;
+  if (skippedZeroCommentPosts > 0) {
+    console.log(`[Phase 2] Bỏ qua ${skippedZeroCommentPosts} posts có comment = 0`);
+  }
+
   const limitedPosts = config.COMMENT_POST_LIMIT > 0
     ? postsToUpdate.slice(0, config.COMMENT_POST_LIMIT)
     : postsToUpdate;
